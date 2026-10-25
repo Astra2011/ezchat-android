@@ -1,0 +1,68 @@
+name: Deploy site (gh-pages)
+
+# Обновляет данные о пинге серверов на статическом сайте PolySRV.
+#
+# Сайт лежит в ветке gh-pages (index.html, servers.json, update.json) и отдаётся
+# GitHub Pages напрямую из ветки — поэтому деплой делается обычным git push
+# в gh-pages (Pages пересобирается сам). actions/deploy-pages не используем:
+# environment "github-pages" разрешает деплой только с защищённых ветвей,
+# и запуски из master падали с "Branch master is not allowed to deploy".
+#
+# Запускается по расписанию (каждые 30 минут) и вручную.
+#
+# ВАЖНО: cron в GitHub Actions — best effort, а не точный таймер. Запуски могут
+# задерживаться на десятки минут (а при высокой нагрузке — теряться), особенно
+# на "круглых" минутах :00/:30. Поэтому минуты сдвинуты на :05/:35, а для
+# гарантированного обновления можно дёргать repository_dispatch (deploy-site)
+# извне (cron-job.org, UptimeRobot и т.п.) — этот триггер срабатывает сразу.
+
+on:
+  schedule:
+    - cron: '5,35 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [deploy-site]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    name: Refresh ping data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+
+      - name: Checkout scripts
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: scripts-src
+
+      - name: Ping servers
+        run: |
+          set -e
+          # меряем TCP-connect до каждого сервера и пишем pingMs/online прямо в servers.json
+          python3 scripts-src/scripts/ping_servers.py site/servers.json --timeout 3
+
+      - name: Commit and push to gh-pages
+        working-directory: site
+        run: |
+          set -e
+          git add servers.json
+          if git diff --cached --quiet; then
+            echo "ping data unchanged"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="github-actions[bot]@users.noreply.github.com" \
+              commit -m "Обновлён ping серверов"
+          git push origin HEAD:gh-pages

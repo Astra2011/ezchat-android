@@ -1,0 +1,546 @@
+name: Sync upstream
+
+# Подтягивает новый коммит DrKLO/Telegram и заново накладывает наши правки
+# (scripts/polysrv_edits.json). Если наши правки больше не ложатся на новый
+# апстрим — воркфлоу падает с понятным отчётом, результат не коммитится.
+#
+# Запуск: вкладка Actions -> Sync upstream -> Run workflow.
+# Или автоматически каждые 6 часов.
+#
+# Результат коммитится в ветку `branch` (по умолчанию upstream-sync) как
+# master + ОДИН коммит, если включён переключатель `commit_result`. PR из этой
+# ветки в master открывается/обновляется автоматически, если включён `open_pr`.
+#
+# Если апстрим не изменился — воркфлоу заканчивается сразу, без патча/сборки.
+# Сборка идёт в матрице: каждый ABI собирается в своём job'е (параллельно),
+# затем финальный job склеивает 4 single-ABI APK в один universal.
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      build_apk:
+        description: 'Собрать APK (все архитектуры) и приложить артефактом'
+        type: boolean
+        default: true
+      branch:
+        description: 'Ветка'
+        type: string
+        default: 'upstream-sync'
+      commit_result:
+        description: 'Коммитить результат в ветку (выключи, если нужна только сборка)'
+        type: boolean
+        default: true
+      open_pr:
+        description: 'Открыть/обновить PR из ветки результата в master'
+        type: boolean
+        default: true
+      graft_history:
+        description: 'Подтягивать историю апстрима в master (убирает плашку «behind N» в форке)'
+        type: boolean
+        default: true
+      fast_build:
+        description: 'Быстрая сборка: только arm64-v8a (в ~4 раза быстрее, APK без других архитектур)'
+        type: boolean
+        default: false
+      force:
+        description: 'Синхронизировать, даже если апстрим не изменился'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync with DrKLO/Telegram
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    outputs:
+      build: ${{ steps.opts.outputs.build_apk }}
+      branch: ${{ steps.opts.outputs.branch }}
+      abis: ${{ steps.opts.outputs.abis }}
+      up_to_date: ${{ steps.fetch.outputs.up_to_date }}
+
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve options
+        id: opts
+        run: |
+          # На событии schedule входы inputs.* пустые, поэтому считаем флаги явно:
+          # "false" -> выключено, иначе включено.
+          BUILD_APK=$([ "${{ inputs.build_apk }}" = "false" ] && echo false || echo true)
+          FAST_BUILD=$([ "${{ inputs.fast_build }}" = "true" ] && echo true || echo false)
+          FORCE=$([ "${{ inputs.force }}" = "true" ] && echo true || echo false)
+          COMMIT=$([ "${{ inputs.commit_result }}" = "false" ] && echo false || echo true)
+          OPEN_PR=$([ "${{ inputs.open_pr }}" = "false" ] && echo false || echo true)
+          GRAFT=$([ "${{ inputs.graft_history }}" = "false" ] && echo false || echo true)
+          BRANCH="${{ inputs.branch || 'upstream-sync' }}"
+          if [ "$FAST_BUILD" = "true" ]; then
+            ABIS='["arm64-v8a"]'
+          else
+            ABIS='["armeabi-v7a","arm64-v8a","x86","x86_64"]'
+          fi
+          {
+            echo "build_apk=$BUILD_APK"
+            echo "fast_build=$FAST_BUILD"
+            echo "force=$FORCE"
+            echo "commit=$COMMIT"
+            echo "open_pr=$OPEN_PR"
+            echo "graft_history=$GRAFT"
+            echo "branch=$BRANCH"
+            echo "abis=$ABIS"
+          } >> "$GITHUB_OUTPUT"
+          echo "build_apk=$BUILD_APK fast_build=$FAST_BUILD commit=$COMMIT open_pr=$OPEN_PR graft=$GRAFT force=$FORCE branch=$BRANCH abis=$ABIS"
+
+      - name: Check that polysrv_edits.json is up to date
+        run: |
+          # список правок должен соответствовать текущему состоянию нашего кода,
+          # иначе в CI соберётся устаревшая версия (как сломанный abiFilters)
+          python3 scripts/generate_polysrv_edits.py
+          if ! git diff --quiet -- scripts/polysrv_edits.json; then
+            echo "scripts/polysrv_edits.json устарел — перегенерируй и закоммить:"
+            git --no-pager diff --stat -- scripts/polysrv_edits.json
+            git checkout -- scripts/polysrv_edits.json
+            exit 1
+          fi
+          echo "polysrv_edits.json актуален"
+
+      - name: Fetch upstream
+        id: fetch
+        run: |
+          set -e
+          git remote add upstream https://github.com/DrKLO/Telegram.git 2>/dev/null || \
+          git remote set-url upstream https://github.com/DrKLO/Telegram.git
+          # Тянем только tip. Одного --depth=1 мало: ветка результата должна иметь
+          # общую историю с master, иначе GitHub не сможет построить diff для PR.
+          # Поэтому углубляем историю, пока не появится merge-base с нашим HEAD.
+          if ! git fetch --depth=1 --no-tags upstream master; then
+            git fetch --depth=1 --no-tags upstream HEAD
+          fi
+          for deepen in 50 200 1000 5000; do
+            if git merge-base FETCH_HEAD HEAD >/dev/null 2>&1; then break; fi
+            echo "история апстрима ещё не связана с нашей — углубляю на $deepen"
+            git fetch --deepen=$deepen --no-tags upstream master || break
+          done
+          if git merge-base FETCH_HEAD HEAD >/dev/null 2>&1; then
+            echo "общая история с апстримом: $(git merge-base FETCH_HEAD HEAD)"
+          else
+            echo "::warning::общая история с апстримом не найдена — PR может не создаться"
+          fi
+          NEW_SHA=$(git rev-parse FETCH_HEAD)
+          echo "sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+          echo "upstream commit: $NEW_SHA"
+          git log -1 --format='upstream date: %ci  subject: %s' FETCH_HEAD
+          # Ранняя проверка: если мы уже синхронизировались с этим SHA — делать нечего
+          LAST_SHA=$(git ls-remote --tags origin refs/tags/upstream-synced 2>/dev/null | cut -f1 | tr -d '[:space:]' || true)
+          echo "last synced: ${LAST_SHA:-<нет>}"
+          if [ -n "$LAST_SHA" ] && [ "$LAST_SHA" = "$NEW_SHA" ] && [ "${{ steps.opts.outputs.force }}" != "true" ]; then
+            echo "апстрим не изменился — синхронизация не требуется"
+            echo "up_to_date=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up_to_date=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Кеш готового пропатченного дерева ВМЕСТЕ с сабмодулями (~700 МБ tar).
+      # Ключ = SHA апстрима + хеш наших правок и конфигов: пока ничего не менялось,
+      # не тратим ~2.5 минуты на git submodule update и упаковку.
+      # Не используем, когда нужно коммитить новый апстрим (нужен живой worktree).
+      - name: Restore patched source cache
+        id: srccache
+        if: ${{ steps.opts.outputs.build_apk == 'true' && (steps.opts.outputs.commit != 'true' || steps.fetch.outputs.up_to_date == 'true') }}
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/upstream-src.tar.gz
+          key: patched-src-${{ steps.fetch.outputs.sha }}-${{ hashFiles('scripts/polysrv_edits.json', 'scripts/patch_polysrv.py', 'servers.env', 'gradle.properties') }}
+
+      - name: Checkout upstream tree
+        if: ${{ steps.srccache.outputs.cache-hit != 'true' && (steps.opts.outputs.build_apk == 'true' || steps.fetch.outputs.up_to_date != 'true') }}
+        run: |
+          rm -rf /tmp/upstream
+          git worktree add --detach /tmp/upstream FETCH_HEAD
+          ls /tmp/upstream | head
+
+      - name: Check that our changes still apply
+        if: ${{ steps.srccache.outputs.cache-hit != 'true' && (steps.opts.outputs.build_apk == 'true' || steps.fetch.outputs.up_to_date != 'true') }}
+        run: python3 scripts/patch_polysrv.py --target /tmp/upstream --check --strict
+
+      - name: Apply our changes
+        if: ${{ steps.srccache.outputs.cache-hit != 'true' && (steps.opts.outputs.build_apk == 'true' || steps.fetch.outputs.up_to_date != 'true') }}
+        run: python3 scripts/patch_polysrv.py --target /tmp/upstream
+
+      - name: Verify no changes were lost
+        if: ${{ steps.srccache.outputs.cache-hit != 'true' && (steps.opts.outputs.build_apk == 'true' || steps.fetch.outputs.up_to_date != 'true') }}
+        run: |
+          # ключевые наши куски должны присутствовать в итоговом дереве
+          set -e
+          grep -q "applyServerConfig" /tmp/upstream/TMessagesProj/jni/tgnet/ConnectionsManager.cpp
+          grep -q "applyDcTable" /tmp/upstream/TMessagesProj/jni/tgnet/ConnectionsManager.cpp
+          grep -q "calculatePublicKeyFingerprint" /tmp/upstream/TMessagesProj/jni/tgnet/Handshake.cpp
+          test -f /tmp/upstream/TMessagesProj/src/main/java/org/telegram/polysrv/PolySrvServers.java
+          test -f /tmp/upstream/servers.env
+          echo "our changes are in place"
+
+      # Плашка «This branch is N commits behind DrKLO:master» появляется, когда
+      # в истории master нет коммитов апстрима (нам переносится только дерево).
+      # Добавляем merge-коммит с апстримом вторым родителем, дерево НЕ меняем:
+      # файлы остаются нашими, но история апстрима становится достижимой.
+      - name: Graft upstream history into master
+        if: ${{ steps.fetch.outputs.up_to_date != 'true' && steps.opts.outputs.commit == 'true' && steps.opts.outputs.graft_history == 'true' }}
+        run: |
+          set -e
+          UPSTREAM_SHA="${{ steps.fetch.outputs.sha }}"
+          SHORT=$(git rev-parse --short "$UPSTREAM_SHA")
+          graft() {
+            git -c user.name="github-actions[bot]" \
+                -c user.email="github-actions[bot]@users.noreply.github.com" \
+                commit-tree "$1^{tree}" -p "$1" -p "$UPSTREAM_SHA" \
+                -m "Merge upstream DrKLO/Telegram $SHORT [skip ci]"
+          }
+          git fetch --depth=1 origin master 2>/dev/null || true
+          BASE=$(git rev-parse origin/master)
+          if git merge-base --is-ancestor "$UPSTREAM_SHA" "$BASE" 2>/dev/null; then
+            echo "история апстрима уже в master — графт не нужен"
+            exit 0
+          fi
+          MERGE=$(graft "$BASE")
+          for attempt in 1 2 3; do
+            if git push origin "$MERGE:refs/heads/master"; then
+              echo "master: история апстрима подтянута ($(git rev-parse --short "$MERGE"))"
+              exit 0
+            fi
+            echo "push отклонён (попытка $attempt) — обновляю master и пробую снова"
+            git fetch --depth=1 origin master
+            BASE=$(git rev-parse origin/master)
+            if git merge-base --is-ancestor "$UPSTREAM_SHA" "$BASE" 2>/dev/null; then
+              echo "история апстрима уже в master — графт не нужен"
+              exit 0
+            fi
+            MERGE=$(graft "$BASE")
+            sleep 5
+          done
+          echo "не удалось подтянуть историю апстрима в master"
+          exit 1
+
+      - name: Commit result
+        id: commit
+        if: ${{ steps.fetch.outputs.up_to_date != 'true' && steps.opts.outputs.commit == 'true' && steps.opts.outputs.branch != '' }}
+        run: |
+          set -e
+          cd /tmp/upstream
+          BRANCH="${{ steps.opts.outputs.branch }}"
+          # SHA апстрима берём из output шага Fetch upstream: в worktree свой FETCH_HEAD
+          UPSTREAM_SHA="${{ steps.fetch.outputs.sha }}"
+          # .github из апстрима в дерево не берём: ниже вернём его из master.
+          git rm -r -q --cached .github 2>/dev/null || true
+          rm -rf .github
+          # запоминаем, с какого апстрима синхронизировались (для ранней проверки)
+          echo "$UPSTREAM_SHA" > .upstream-sha
+          git add -A
+          APP_TREE=$(git write-tree)
+
+          # Ветку результата делаем как master + ОДИН коммит (а не 90 коммитов
+          # истории апстрима): так PR обновляется одним коммитом и мержится без
+          # конфликтов, а не тащит за собой всю историю DrKLO/Telegram.
+          git fetch --depth=1 origin master 2>/dev/null || true
+          BASE_SHA=$(git rev-parse origin/master)
+          # .github и scripts берём из master: иначе PR удалил бы CI и наши скрипты.
+          TMP_INDEX=$(mktemp)
+          GIT_INDEX_FILE="$TMP_INDEX" git read-tree "$APP_TREE"
+          GIT_INDEX_FILE="$TMP_INDEX" git read-tree --prefix=.github/ "$BASE_SHA:.github"
+          GIT_INDEX_FILE="$TMP_INDEX" git read-tree --prefix=scripts/ "$BASE_SHA:scripts"
+          NEW_TREE=$(GIT_INDEX_FILE="$TMP_INDEX" git write-tree)
+          rm -f "$TMP_INDEX"
+
+          # Сравниваем ИТОГОВОЕ ДЕРЕВО с удалённой веткой: если оно идентично —
+          # ничего не пушим.
+          git fetch --depth=1 origin "$BRANCH" 2>/dev/null || true
+          REMOTE_TREE=$(git rev-parse "origin/$BRANCH^{tree}" 2>/dev/null || echo "")
+          REMOTE_PARENT=$(git rev-parse "origin/$BRANCH^1" 2>/dev/null || echo "")
+          if [ -n "$REMOTE_TREE" ] && [ "$REMOTE_TREE" = "$NEW_TREE" ] && [ "$REMOTE_PARENT" = "$BASE_SHA" ]; then
+            echo "ветка $BRANCH уже указывает на master — ничего не изменилось"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            COMMIT=$(git -c user.name="github-actions[bot]" \
+                          -c user.email="github-actions[bot]@users.noreply.github.com" \
+                          commit-tree "$NEW_TREE" -p "$BASE_SHA" \
+                          -m "chore: sync with upstream DrKLO/Telegram $(git rev-parse --short "$UPSTREAM_SHA")")
+            git update-ref "refs/heads/$BRANCH" "$COMMIT"
+            git push --force origin "refs/heads/$BRANCH:refs/heads/$BRANCH"
+            echo "ветка $BRANCH: master + 1 коммит ($(git rev-parse --short "$COMMIT"))"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          # Тег с SHA апстрима: по нему следующий прогон поймёт, что синхронизироваться не нужно
+          git tag -f upstream-synced "$UPSTREAM_SHA"
+          git push --force origin refs/tags/upstream-synced
+
+      # PR создаём/обновляем через gh: ветка уже запушена шагом выше, поэтому
+      # отдельный экшен, который сам коммитит и пушит, здесь не нужен.
+      - name: Open or update PR
+        if: ${{ steps.commit.outputs.changed != '' && steps.opts.outputs.open_pr == 'true' }}
+        env:
+          # Если включено "Allow GitHub Actions to create and approve pull requests",
+          # хватит GITHUB_TOKEN. Иначе можно положить PAT в секрет SYNC_PAT.
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          BRANCH="${{ steps.opts.outputs.branch }}"
+          BASE="${{ github.event.repository.default_branch || 'master' }}"
+          if [ -z "$BRANCH" ] || [ "$BRANCH" = "$BASE" ]; then
+            echo "ветка результата совпадает с базовой — PR не нужен"
+            exit 0
+          fi
+          # Если ветка уже совпадает с master (например, PR только что смержили) —
+          # PR создавать не из чего.
+          AHEAD=$(git rev-list --count "origin/$BASE..origin/$BRANCH" 2>/dev/null || echo 0)
+          if [ "$AHEAD" = "0" ]; then
+            echo "ветка $BRANCH не отличается от $BASE — PR не нужен"
+            exit 0
+          fi
+          # Бывает, что коммит есть, а дерево то же (обновились только файлы,
+          # которые в PR не попадают) — пустой PR не открываем.
+          BRANCH_TREE=$(git rev-parse "origin/$BRANCH^{tree}" 2>/dev/null || echo "")
+          BASE_TREE=$(git rev-parse "origin/$BASE^{tree}" 2>/dev/null || echo "")
+          if [ -n "$BRANCH_TREE" ] && [ "$BRANCH_TREE" = "$BASE_TREE" ]; then
+            echo "дерево $BRANCH совпадает с $BASE — пустой PR не нужен"
+            exit 0
+          fi
+          SHA="${{ steps.fetch.outputs.sha }}"
+          SHORT=$(git rev-parse --short "$SHA")
+          TITLE="Sync with upstream DrKLO/Telegram ($SHORT)"
+          BODY=$(printf 'Автосинхронизация с апстримом [DrKLO/Telegram@%s](https://github.com/DrKLO/Telegram/commit/%s).\n\nНаши правки наложены заново из `scripts/polysrv_edits.json`.\n\nПеред мержем проверь, что сборка зелёная и правки на месте.\n' "$SHORT" "$SHA")
+          EXISTING=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE" \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY" \
+              || echo "::warning::не удалось обновить PR #$EXISTING"
+            echo "обновлён PR #$EXISTING ($BRANCH -> $BASE)"
+          else
+            # GITHUB_TOKEN не может создавать PR, пока в настройках репозитория не включено
+            # Settings -> Actions -> General -> "Allow GitHub Actions to create and approve
+            # pull requests". Не роняем из-за этого весь sync — просто предупреждаем.
+            if gh pr create --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE" \
+                 --title "$TITLE" --body "$BODY"; then
+              echo "создан PR $BRANCH -> $BASE"
+            else
+              echo "::warning::PR не создан. Включи Settings -> Actions -> General -> Workflow permissions -> Allow GitHub Actions to create and approve pull requests. Ветка $BRANCH запушена."
+            fi
+          fi
+
+      - name: Init submodules
+        if: ${{ steps.opts.outputs.build_apk == 'true' && steps.srccache.outputs.cache-hit != 'true' }}
+        working-directory: /tmp/upstream
+        run: |
+          set -e
+          git submodule update --init --recursive
+          git submodule status | head -25
+
+      - name: Pack patched source (with submodules)
+        if: ${{ steps.opts.outputs.build_apk == 'true' && steps.srccache.outputs.cache-hit != 'true' }}
+        run: |
+          set -e
+          # пакуем дерево вместе с сабмодулями (~1 ГБ), чтобы build-джобы не качали их каждый
+          tar --exclude=.git --exclude=build --exclude=.cxx -czf /tmp/upstream-src.tar.gz -C /tmp upstream
+          ls -lh /tmp/upstream-src.tar.gz
+
+      - name: Save patched source cache
+        if: ${{ steps.opts.outputs.build_apk == 'true' && steps.srccache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/upstream-src.tar.gz
+          key: ${{ steps.srccache.outputs.cache-primary-key }}
+
+      - name: Upload patched source
+        if: ${{ steps.opts.outputs.build_apk == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-src
+          path: /tmp/upstream-src.tar.gz
+          retention-days: 1
+
+  build:
+    name: Build ${{ matrix.abi }}
+    needs: sync
+    if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ${{ fromJSON(needs.sync.outputs.abis) }}
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v4
+
+      - name: Download patched source
+        uses: actions/download-artifact@v4
+        with:
+          name: upstream-src
+          path: /tmp/src
+
+      - name: Unpack source
+        run: |
+          set -e
+          mkdir -p /tmp/work
+          tar -xzf /tmp/src/upstream-src.tar.gz -C /tmp/work
+          mv /tmp/work/upstream /tmp/upstream
+          ls /tmp/upstream | head
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Кеш Gradle: зависимости + локальный build-cache (Java-компиляция, R8 и т.п.)
+      - name: Set up Gradle caches
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          # build-cache хранится внутри ~/.gradle/caches, чистим только мусор
+          gradle-home-cache-cleanup: true
+
+      - name: Set up Android SDK
+        run: |
+          set -e
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          SDKMANAGER_BIN="$(dirname "$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -1)")"
+          if [ -z "$SDKMANAGER_BIN" ]; then
+            echo "sdkmanager не найден в $ANDROID_HOME/cmdline-tools"; ls -R "$ANDROID_HOME/cmdline-tools" | head -20; exit 1
+          fi
+          export PATH="$SDKMANAGER_BIN:$ANDROID_HOME/platform-tools:$PATH"
+          echo "$SDKMANAGER_BIN" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          sdkmanager --version
+
+      - name: Install SDK packages
+        run: |
+          set -e
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null
+          sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" "platforms;android-36" "build-tools;36.0.0" \
+            "ndk;27.2.12479018" "cmake;3.22.1"
+
+      # Хеш исходников натива — ключ кеша ccache: при неизменном апстриме
+      # кеш восстанавливается точно, при изменении подтягиваем предыдущий
+      # (ccache всё равно матчит объектники по содержимому).
+      - name: Source hash for ccache
+        id: srchash
+        run: |
+          set -e
+          H=$(cd /tmp/upstream && \
+              find TMessagesProj/jni TMessagesProj/build.gradle TMessagesProj_App/build.gradle \
+                   gradle.properties -type f -print0 2>/dev/null \
+              | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-16)
+          echo "hash=$H" >> "$GITHUB_OUTPUT"
+          echo "исходники натива: $H"
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.abi }}-${{ steps.srchash.outputs.hash }}
+          restore-keys: |
+            ccache-${{ matrix.abi }}-
+
+      - name: Set up ccache
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ccache
+          {
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_BASEDIR=/tmp/upstream"
+            echo "CCACHE_NOHASHDIR=true"
+            echo "CCACHE_COMPRESS=true"
+            echo "CCACHE_COMPRESSLEVEL=6"
+            echo "CCACHE_MAXSIZE=2G"
+            echo "CCACHE_SLOPPINESS=include_file_ctime,include_file_mtime,time_macros,file_stat_matches"
+            # ВАЖНО: по умолчанию ccache сверяет mtime компилятора, а NDK на раннере
+            # ставится заново в каждом прогоне -> хеш менялся и было 0% попаданий.
+            # "content" хеширует содержимое бинарника — стабильно между прогонами.
+            echo "CCACHE_COMPILERCHECK=content"
+            echo "USE_CCACHE=1"
+          } >> $GITHUB_ENV
+          ccache --version | head -1
+
+      - name: Build APK (${{ matrix.abi }})
+        working-directory: /tmp/upstream
+        run: |
+          set -e
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew :TMessagesProj_App:assembleAfatRelease -PabiFilters=${{ matrix.abi }} --build-cache --stacktrace
+          echo "=== ccache ==="
+          ccache -s || true
+
+      - name: Upload APK ${{ matrix.abi }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ matrix.abi }}
+          path: /tmp/upstream/TMessagesProj_App/build/outputs/apk/afat/release/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  package:
+    name: Package universal APK
+    needs: [sync, build]
+    if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v4
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: apk-*
+          path: /tmp/apks
+          # ВАЖНО: без merge-multiple — во всех артефактах файл называется app.apk,
+          # при слиянии они перезатирали друг друга (в universal попадал только один ABI).
+          merge-multiple: false
+
+      - name: List downloaded APKs
+        run: find /tmp/apks -name '*.apk' -exec ls -lh {} \;
+
+      - name: Merge into universal APK
+        run: |
+          set -e
+          ARGS=""
+          for d in /tmp/apks/*/; do
+            f="$(ls "$d"*.apk 2>/dev/null | head -1)"
+            [ -z "$f" ] && continue
+            abi="$(basename "$d" | sed -n 's/^apk-\(.*\)$/\1/p')"
+            if [ -z "$abi" ]; then abi="$(basename "$f" .apk)"; fi
+            echo "  $abi <- $f"
+            ARGS="$ARGS $abi=$f"
+          done
+          echo "аргументы:$ARGS"
+          [ -n "$ARGS" ] || { echo "нет APK для склейки"; exit 1; }
+          # параметры подписи берём из gradle.properties нашего репо
+          KS_PASS=$(grep -E '^RELEASE_STORE_PASSWORD=' gradle.properties | cut -d= -f2)
+          KEY_PASS=$(grep -E '^RELEASE_KEY_PASSWORD=' gradle.properties | cut -d= -f2)
+          ALIAS=$(grep -E '^RELEASE_KEY_ALIAS=' gradle.properties | cut -d= -f2)
+          python3 scripts/merge_universal_apk.py --apks $ARGS \
+            --keystore TMessagesProj/config/release.keystore --alias "$ALIAS" \
+            --ks-pass "$KS_PASS" --key-pass "$KEY_PASS" --out /tmp/app-universal.apk
+          ls -lh /tmp/app-universal.apk
+
+      - name: Upload universal APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PolySrv-apk-universal
+          path: /tmp/app-universal.apk
+          if-no-files-found: error
+          retention-days: 14
