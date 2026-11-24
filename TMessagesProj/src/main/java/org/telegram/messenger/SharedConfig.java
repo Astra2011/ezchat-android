@@ -1540,9 +1540,9 @@ public class SharedConfig {
         Utilities.globalQueue.postRunnable(() -> {
             try {
                 File telegramPath = new File(Environment.getExternalStorageDirectory(), "Telegram");
-                File imagePath = new File(telegramPath, "PolySRV Images");
+                File imagePath = new File(telegramPath, "EzChat Images");
                 imagePath.mkdir();
-                File videoPath = new File(telegramPath, "PolySRV Video");
+                File videoPath = new File(telegramPath, "EzChat Video");
                 videoPath.mkdir();
 
                 if (!BuildVars.NO_SCOPED_STORAGE) {
