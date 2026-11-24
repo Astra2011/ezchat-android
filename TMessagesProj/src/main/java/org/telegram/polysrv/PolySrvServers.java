@@ -34,15 +34,22 @@ public class PolySrvServers {
 
     // Официальный Telegram (multi-DC, стоковый ключ).
     static final String TELEGRAM_RSA_KEY =
-        "-----BEGIN RSA PUBLIC KEY-----\n" +
-        "MIIBCgKCAQEA6LszBcC1LGzyr992NzE0ieY+BSaOW622Aa9Bd4ZHLl+TuFQ4lo4g\n" +
-        "5nKaMBwK/BIb9xUfg0Q29/2mgIR6Zr9krM7HjuIcCzFvDtr+L0GQjae9H0pRB2OO\n" +
-        "62cECs5HKhT5DZ98K33vmWiLowc621dQuwKWSQKjWf50XYFw42h21P2KXUGyp2y/\n" +
-        "+aEyZ+uVgLLQbRA1dEjSDZ2iGRy12Mk5gpYc397aYp438fsJoHIgJ2lgMv5h7WY9\n" +
-        "t6N/byY9Nw9p21Og3AoXSL2q/2IJ1WRUhebgAdGVMlV1fkuOQoEzR7EdpqtQD9Cs\n" +
-        "5+bfo3Nhmcyvk5ftB0WkJ9z6bNZ7yxrP8wIDAQAB\n" +
+        "-----BEGIN RSA PUBLIC KEY-----
+" +
+        "MIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3
+" +
+        "aNoBhnW0QEekPYpUvDqRaHLL3yt92aWxUdeFhLmeabdFU85YSUmZ+Awz7BiKamIA
+" +
+        "93m1w8tI9AttQ/Xv5dtHiQaVA8+zuAQOPZmxF6capvqP59r9NOTrvtLWChxSZIMl
+" +
+        "l8zW5S+G5QZ/vMf1ox8LSitpUI/vWSYSmEDX2BBpi3s4v6hBS+9Jk5J30DS12NjT
+" +
+        "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb
+" +
+        "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB
+" +
         "-----END RSA PUBLIC KEY-----";
-    static final long TELEGRAM_RSA_FINGERPRINT = 0xd09d1d85de64fd85L;
+    static final long TELEGRAM_RSA_FINGERPRINT = 0x1b6f660cb4133dd8L;
 
     // --- Конфиг серверов (CDN) ---
 
@@ -58,93 +65,15 @@ public class PolySrvServers {
      * пересборки приложения.
      */
     public static synchronized void loadConfig() {
-        if (configLoaded) {
-            return;
-        }
         configLoaded = true;
-
-        // 1) встроенный конфиг из assets
-        try {
-            InputStream is = ApplicationLoader.applicationContext.getAssets().open("servers.json");
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] buf = new byte[4096];
-            int len;
-            while ((len = is.read(buf)) > 0) {
-                bos.write(buf, 0, len);
-            }
-            is.close();
-            parseConfig(new String(bos.toByteArray()));
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-
-        // 2) кэш с CDN (с прошлого запуска)
-        try {
-            String cached = getPrefs().getString(KEY_CONFIG_CACHE, null);
-            if (!TextUtils.isEmpty(cached)) {
-                parseConfig(cached);
-            }
-        } catch (Exception e) {
-            FileLog.e(e);
-        }
-    }
+    }}
 
     /** Обновляет конфиг с CDN (в фоне). Пробует основной URL, затем запасной. */
     public static void refreshConfigFromNetwork(final Runnable onDone) {
-        final java.util.List<String> urls = new ArrayList<>();
-        if (!TextUtils.isEmpty(BuildConfig.SERVERS_CONFIG_URL)) {
-            urls.add(BuildConfig.SERVERS_CONFIG_URL);
+        if (onDone != null) {
+            AndroidUtilities.runOnUIThread(onDone);
         }
-        if (!TextUtils.isEmpty(BuildConfig.SERVERS_CONFIG_URL_FALLBACK)) {
-            urls.add(BuildConfig.SERVERS_CONFIG_URL_FALLBACK);
-        }
-        if (urls.isEmpty()) {
-            if (onDone != null) {
-                AndroidUtilities.runOnUIThread(onDone);
-            }
-            return;
-        }
-        new Thread(() -> {
-            for (String url : urls) {
-                try {
-                    // cache-busting: иначе CDN отдаёт старый файл из кэша
-                String urlWithTs = url + (url.contains("?") ? "&" : "?") + "_t=" + System.currentTimeMillis();
-                HttpURLConnection conn = (HttpURLConnection) new URL(urlWithTs).openConnection();
-                    conn.setConnectTimeout(BuildConfig.SERVERS_CONFIG_TIMEOUT_MS);
-                    conn.setReadTimeout(BuildConfig.SERVERS_CONFIG_TIMEOUT_MS);
-                    conn.setRequestProperty("Cache-Control", "no-cache");
-                    conn.setRequestProperty("Pragma", "no-cache");
-                    conn.connect();
-                    if (conn.getResponseCode() == 200) {
-                        InputStream is = conn.getInputStream();
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        byte[] buf = new byte[4096];
-                        int len;
-                        while ((len = is.read(buf)) > 0) {
-                            bos.write(buf, 0, len);
-                        }
-                        is.close();
-                        String text = new String(bos.toByteArray());
-                        if (parseConfig(text)) {
-                            getPrefs().edit()
-                                    .putString(KEY_CONFIG_CACHE, text)
-                                    .putLong(KEY_CONFIG_TIME, System.currentTimeMillis())
-                                    .apply();
-                            conn.disconnect();
-                            break;
-                        }
-                    }
-                    conn.disconnect();
-                } catch (Exception e) {
-                    FileLog.e(e);
-                }
-            }
-            if (onDone != null) {
-                // колбэк трогает UI — обязательно в главном потоке
-                AndroidUtilities.runOnUIThread(onDone);
-            }
-        }, "polysrv-config").start();
-    }
+    }}
 
     /**
      * Информация о последней сборке: с сайта (update.json).
@@ -153,108 +82,29 @@ public class PolySrvServers {
     public static final String KEY_UPDATE_CACHE = "servers_update_json";
 
     public static JSONObject getUpdateInfo() {
-        try {
-            String cached = getPrefs().getString(KEY_UPDATE_CACHE, null);
-            if (TextUtils.isEmpty(cached)) {
-                return null;
-            }
-            return new JSONObject(cached);
-        } catch (Exception e) {
-            return null;
-        }
-    }
+        return null;
+    }}
 
     /** Ссылка на APK последней сборки (если сервер её отдаёт). */
     public static String getLatestApkUrl() {
-        JSONObject info = getUpdateInfo();
-        if (info == null) {
-            return null;
-        }
-        return info.optString("apkUrl", null);
-    }
+        return null;
+    }}
 
     /** true, если на сайте есть сборка новее установленной. */
     public static boolean hasNewerVersion() {
-        JSONObject info = getUpdateInfo();
-        if (info == null) {
-            return false;
-        }
-        long remote = info.optLong("versionCode", 0);
-        if (remote <= 0) {
-            return false;
-        }
-        try {
-            int current = ApplicationLoader.applicationContext.getPackageManager()
-                    .getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0).versionCode;
-            return remote > current;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+        return false;
+    }}
 
     /**
      * Периодически обновляет список серверов с сайта, пока приложение живо.
      * Список на экране обновляется сразу после очередного успешного запроса.
      */
     public static void startConfigPolling(final java.util.concurrent.atomic.AtomicLong lastUpdate) {
-        final long period = 5 * 60 * 1000L;
-        android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                refreshConfigFromNetwork(new Runnable() {
-                    @Override
-                    public void run() {
-                        long now = System.currentTimeMillis();
-                        if (lastUpdate.get() != 0 && now - lastUpdate.get() > 30 * 1000L) {
-                            lastUpdate.set(now);
-                            AndroidUtilities.runOnUIThread(() ->
-                                    NotificationCenter.getGlobalInstance()
-                                            .postNotificationName(NotificationCenter.polysrvServersUpdated, 0));
-                        }
-                    }
-                });
-                handler.postDelayed(this, period);
-            }
-        }, period);
-    }
+    }}
 
     /** Скачивает update.json с сайта (в фоне) и кэширует. */
     public static void refreshUpdateInfo() {
-        final String url = BuildConfig.SERVERS_CONFIG_URL;
-        if (TextUtils.isEmpty(url)) {
-            return;
-        }
-        // update.json лежит рядом с servers.json
-        final String updateUrl = url.substring(0, url.lastIndexOf('/') + 1) + "update.json";
-        new Thread(() -> {
-            try {
-                String updateUrlWithTs = updateUrl + (updateUrl.contains("?") ? "&" : "?") + "_t=" + System.currentTimeMillis();
-                HttpURLConnection conn = (HttpURLConnection) new URL(updateUrlWithTs).openConnection();
-                conn.setConnectTimeout(BuildConfig.SERVERS_CONFIG_TIMEOUT_MS);
-                conn.setReadTimeout(BuildConfig.SERVERS_CONFIG_TIMEOUT_MS);
-                conn.setRequestProperty("Cache-Control", "no-cache");
-                conn.connect();
-                if (conn.getResponseCode() == 200) {
-                    InputStream is = conn.getInputStream();
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    byte[] buf = new byte[4096];
-                    int len;
-                    while ((len = is.read(buf)) > 0) {
-                        bos.write(buf, 0, len);
-                    }
-                    is.close();
-                    String text = new String(bos.toByteArray());
-                    if (text.trim().startsWith("{")) {
-                        getPrefs().edit().putString(KEY_UPDATE_CACHE, text).apply();
-                    }
-                }
-                conn.disconnect();
-            } catch (Exception e) {
-                FileLog.e(e);
-            }
-        }, "polysrv-update").start();
-    }
+    }}
 
     /**
      * Достаёт JSON конфига из ответа: либо файл сам является JSON, либо это .env
@@ -340,38 +190,28 @@ public class PolySrvServers {
 
     /** Официальный Telegram (multi-DC). Адреса DC и RSA-ключ — из конфига (CDN). */
     public static PolySrvServer telegramServer() {
-        loadConfig();
-        for (PolySrvServer s : configServers) {
-            if (ID_TELEGRAM.equals(s.id)) {
-                return s;
-            }
-        }
         PolySrvServer s = new PolySrvServer();
-        s.id                 = ID_TELEGRAM;
-        s.name               = "Telegram";
-        s.description        = "Official Telegram cloud. Sign in with your Telegram account.";
-        s.host               = "149.154.167.51";
-        s.port               = 443;
+        s.id                 = "ezchat";
+        s.name               = "EzChat";
+        s.description        = "EzChat messenger, connected to ezchat.im.";
+        s.host               = "ezchat.im";
+        s.port               = 2398;
         s.isOfficial         = true;
-        s.isTelegram         = true;
-        s.multiDc            = true;
-        s.mainDcId           = 2;
+        s.isTelegram         = false;
+        s.multiDc            = false;
+        s.mainDcId           = 1;
         s.rsaPublicKey       = TELEGRAM_RSA_KEY;
         s.rsaKeyFingerprint  = TELEGRAM_RSA_FINGERPRINT;
         return s;
-    }
+    }}
 
     // --- Server list ---
 
     public static List<PolySrvServer> listServers() {
         List<PolySrvServer> result = new ArrayList<>();
-        result.addAll(getConfigServers());
-        if (result.isEmpty()) {
-            result.add(telegramServer());
-        }
-        result.addAll(loadCustomServers());
+        result.add(telegramServer());
         return result;
-    }
+    }}
 
     public static PolySrvServer getServerById(String id) {
         if (id == null) return null;
@@ -444,20 +284,19 @@ public class PolySrvServers {
     // --- Account - server binding ---
 
     public static String getServerIdForAccount(int accountNum) {
-        return getPrefs().getString(KEY_ACCOUNT_SERVER + accountNum, null);
-    }
+        return "ezchat";
+    }}
 
     public static void setServerForAccount(String serverId, int accountNum) {
-        getPrefs().edit().putString(KEY_ACCOUNT_SERVER + accountNum, serverId).apply();
-    }
+    }}
 
     public static PolySrvServer getServerForAccount(int accountNum) {
-        return getServerById(getServerIdForAccount(accountNum));
-    }
+        return telegramServer();
+    }}
 
     public static boolean hasServerForAccount(int accountNum) {
-        return getServerIdForAccount(accountNum) != null;
-    }
+        return true;
+    }}
 
     /**
      * Stable key for grouping per-server local device state (currently: recent/frequently-used
@@ -473,12 +312,8 @@ public class PolySrvServers {
      * still share one scope.
      */
     public static String serverScopeKeyForAccount(int accountNum) {
-        PolySrvServer s = getServerForAccount(accountNum);
-        if (s == null || s.isTelegram || TextUtils.isEmpty(s.host)) {
-            return "";
-        }
-        return s.host.toLowerCase(java.util.Locale.US);
-    }
+        return "ezchat.im";
+    }}
 
 
 
@@ -491,20 +326,8 @@ public class PolySrvServers {
      * so two profiles pointing at the same machine are still treated as one.
      */
     public static boolean sameAccountServer(int accountA, int accountB) {
-        String idA = getServerIdForAccount(accountA);
-        String idB = getServerIdForAccount(accountB);
-        if (java.util.Objects.equals(idA, idB)) {
-            return true;
-        }
-        PolySrvServer sa = getServerById(idA);
-        PolySrvServer sb = getServerById(idB);
-        if (sa == null || sb == null) {
-            return false;
-        }
-        return sa.isTelegram == sb.isTelegram
-                && sa.port == sb.port
-                && sa.host != null && sa.host.equals(sb.host);
-    }
+        return true;
+    }}
 
     // --- DC application ---
 
@@ -522,48 +345,17 @@ public class PolySrvServers {
     }
 
     public static void applyServerToAccount(PolySrvServer server, int accountNum, boolean resetKeys) {
-        if (server == null) return;
-        final String key;
-        final long fingerprint;
-        if (server.isTelegram) {
-            key = TELEGRAM_RSA_KEY;
-            fingerprint = TELEGRAM_RSA_FINGERPRINT;
-        } else if (server.rsaPublicKey != null && !server.rsaPublicKey.isEmpty()) {
-            // Custom server with its own RSA key. Pass fingerprint 0 so the native
-            // layer derives it from the PEM (we can't compute it in Java).
-            key = server.rsaPublicKey;
-            fingerprint = (server.rsaKeyFingerprint != 0) ? server.rsaKeyFingerprint : 0;
-        } else {
-            // Ключ не задан -> стоковый Telegram-ключ (подходит для Telegram-совместимых прокси).
-            key = TELEGRAM_RSA_KEY;
-            fingerprint = TELEGRAM_RSA_FINGERPRINT;
-        }
-        int mainDc = server.mainDcId > 0
-                ? server.mainDcId
-                : (server.isTelegram ? 2 : 1);
-        // Таблица адресов DC из конфига (CDN) — если сервер multi-DC.
-        if (!server.dc.isEmpty()) {
-            java.util.List<String> hosts = new ArrayList<>();
-            java.util.List<Integer> ports = new ArrayList<>();
-            for (PolySrvServer.Dc dc : server.dc) {
-                if (dc == null || TextUtils.isEmpty(dc.host)) continue;
-                hosts.add(dc.host);
-                ports.add(dc.port > 0 ? dc.port : 443);
-            }
-            if (!hosts.isEmpty()) {
-                ConnectionsManager.getInstance(accountNum).applyDcTable(hosts.toArray(new String[0]), ports.stream().mapToInt(Integer::intValue).toArray());
-            }
-        }
+        PolySrvServer s = telegramServer();
         ConnectionsManager.native_applyServerConfig(
                 accountNum,
-                server.host,
-                server.port,
-                server.isTelegram,
-                mainDc,
-                key,
-                fingerprint,
+                s.host,
+                s.port,
+                s.isTelegram,
+                s.mainDcId,
+                s.rsaPublicKey,
+                s.rsaKeyFingerprint,
                 resetKeys);
-    }
+    }}
 
     /**
      * Called from ApplicationLoader after each account's ConnectionsManager is
@@ -571,11 +363,8 @@ public class PolySrvServers {
      * reset auth keys so an already-authorized session keeps working.
      */
     public static void applyStoredServerToAccount(int accountNum) {
-        PolySrvServer server = getServerForAccount(accountNum);
-        if (server != null) {
-            applyServerToAccount(server, accountNum, false);
-        }
-    }
+        applyServerToAccount(telegramServer(), accountNum, false);
+    }}
 
     // --- Helpers ---
 
@@ -586,14 +375,8 @@ public class PolySrvServers {
 
     /** Returns true when at least one active account uses a Telegram-official server. */
     public static boolean anyAccountIsTelegram() {
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
-                PolySrvServer s = getServerForAccount(a);
-                if (s != null && s.isTelegram) return true;
-            }
-        }
         return false;
-    }
+    }}
 
 
 
@@ -603,9 +386,8 @@ public class PolySrvServers {
      * the main app header so it shows the current server instead of "Telegram".
      */
     public static String serverNameForAccount(int accountNum) {
-        PolySrvServer s = getServerForAccount(accountNum);
-        return (s != null) ? s.name : null;
-    }
+        return "EzChat";
+    }}
 
     // --- Account limits (mirrors desktop: premium cap is Telegram-only) ---
 
@@ -621,15 +403,8 @@ public class PolySrvServers {
 
     /** Number of activated accounts on a Telegram-official server. */
     public static int countTelegramAccounts() {
-        int n = 0;
-        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
-                PolySrvServer s = getServerForAccount(a);
-                if (s != null && s.isTelegram) n++;
-            }
-        }
-        return n;
-    }
+        return 0;
+    }}
 
     // Telegram-official account caps, mirroring the desktop client:
     //   kMaxAccounts = 3 (free), kPremiumMaxAccounts = 6 (with premium).
@@ -650,6 +425,6 @@ public class PolySrvServers {
 
     /** True if another Telegram account can still be added under the premium cap. */
     public static boolean canAddTelegramAccount() {
-        return countTelegramAccounts() < telegramAccountLimit();
-    }
+        return true;
+    }}
 }

@@ -1095,7 +1095,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         // Добавление второго аккаунта — сразу показываем выбор сервера
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (a != currentAccount && UserConfig.getInstance(a).isClientActivated()) {
-                return new ServerSelectFragment();
+                return new LoginActivity();
             }
         }
         // Свежая установка — интро; выбор сервера запускается кнопкой "Start Messaging"

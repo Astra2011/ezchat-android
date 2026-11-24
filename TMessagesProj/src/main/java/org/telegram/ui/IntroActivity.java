@@ -384,7 +384,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             }
             startPressed = true;
 
-            presentFragment(new ServerSelectFragment(), true);
+            presentFragment(new LoginActivity(), true);
             destroyed = true;
         });
 
@@ -413,7 +413,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
                         NotificationCenter.getGlobalInstance().removeObserver(this, id);
                         AndroidUtilities.runOnUIThread(()->{
-                            presentFragment(new ServerSelectFragment(), true);
+                            presentFragment(new LoginActivity(), true);
                             destroyed = true;
                         }, 100);
                     }

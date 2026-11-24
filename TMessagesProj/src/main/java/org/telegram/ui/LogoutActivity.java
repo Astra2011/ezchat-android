@@ -139,7 +139,7 @@ public class LogoutActivity extends BaseFragment {
                 }
                 if (freeAccounts > 0 && availableAccount != null) {
                     // Любой аккаунт (в т.ч. на кастомном сервере) может занять любой свободный слот.
-                    presentFragment(new ServerSelectFragment(availableAccount));
+                    presentFragment(new LoginActivity(availableAccount));
                 } else if (!UserConfig.hasPremiumOnAccounts()) {
                     LimitReachedBottomSheet limitReachedBottomSheet = new LimitReachedBottomSheet(this, getContext(), TYPE_ACCOUNTS, currentAccount, null);
                     showDialog(limitReachedBottomSheet);

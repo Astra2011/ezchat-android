@@ -14610,7 +14610,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             }
                         }
                         if (freeAccount >= 0) {
-                            f.presentFragment(new ServerSelectFragment(freeAccount));
+                            f.presentFragment(new LoginActivity(freeAccount));
                         }
                     }).withLink("srv://settings/edit/add-account"),
                     // TODO:
