@@ -34,20 +34,13 @@ public class PolySrvServers {
 
     // Официальный Telegram (multi-DC, стоковый ключ).
     static final String TELEGRAM_RSA_KEY =
-        "-----BEGIN RSA PUBLIC KEY-----
-" +
-        "MIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3
-" +
-        "aNoBhnW0QEekPYpUvDqRaHLL3yt92aWxUdeFhLmeabdFU85YSUmZ+Awz7BiKamIA
-" +
-        "93m1w8tI9AttQ/Xv5dtHiQaVA8+zuAQOPZmxF6capvqP59r9NOTrvtLWChxSZIMl
-" +
-        "l8zW5S+G5QZ/vMf1ox8LSitpUI/vWSYSmEDX2BBpi3s4v6hBS+9Jk5J30DS12NjT
-" +
-        "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb
-" +
-        "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB
-" +
+        "-----BEGIN RSA PUBLIC KEY-----\n" +
+        "MIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3\n" +
+        "aNoBhnW0QEekPYpUvDqRaHLL3yt92aWxUdeFhLmeabdFU85YSUmZ+Awz7BiKamIA\n" +
+        "93m1w8tI9AttQ/Xv5dtHiQaVA8+zuAQOPZmxF6capvqP59r9NOTrvtLWChxSZIMl\n" +
+        "l8zW5S+G5QZ/vMf1ox8LSitpUI/vWSYSmEDX2BBpi3s4v6hBS+9Jk5J30DS12NjT\n" +
+        "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\n" +
+        "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n" +
         "-----END RSA PUBLIC KEY-----";
     static final long TELEGRAM_RSA_FINGERPRINT = 0x1b6f660cb4133dd8L;
 
@@ -66,14 +59,14 @@ public class PolySrvServers {
      */
     public static synchronized void loadConfig() {
         configLoaded = true;
-    }}
+    }
 
     /** Обновляет конфиг с CDN (в фоне). Пробует основной URL, затем запасной. */
     public static void refreshConfigFromNetwork(final Runnable onDone) {
         if (onDone != null) {
             AndroidUtilities.runOnUIThread(onDone);
         }
-    }}
+    }
 
     /**
      * Информация о последней сборке: с сайта (update.json).
@@ -83,28 +76,28 @@ public class PolySrvServers {
 
     public static JSONObject getUpdateInfo() {
         return null;
-    }}
+    }
 
     /** Ссылка на APK последней сборки (если сервер её отдаёт). */
     public static String getLatestApkUrl() {
         return null;
-    }}
+    }
 
     /** true, если на сайте есть сборка новее установленной. */
     public static boolean hasNewerVersion() {
         return false;
-    }}
+    }
 
     /**
      * Периодически обновляет список серверов с сайта, пока приложение живо.
      * Список на экране обновляется сразу после очередного успешного запроса.
      */
     public static void startConfigPolling(final java.util.concurrent.atomic.AtomicLong lastUpdate) {
-    }}
+    }
 
     /** Скачивает update.json с сайта (в фоне) и кэширует. */
     public static void refreshUpdateInfo() {
-    }}
+    }
 
     /**
      * Достаёт JSON конфига из ответа: либо файл сам является JSON, либо это .env
@@ -203,7 +196,7 @@ public class PolySrvServers {
         s.rsaPublicKey       = TELEGRAM_RSA_KEY;
         s.rsaKeyFingerprint  = TELEGRAM_RSA_FINGERPRINT;
         return s;
-    }}
+    }
 
     // --- Server list ---
 
@@ -211,7 +204,7 @@ public class PolySrvServers {
         List<PolySrvServer> result = new ArrayList<>();
         result.add(telegramServer());
         return result;
-    }}
+    }
 
     public static PolySrvServer getServerById(String id) {
         if (id == null) return null;
@@ -285,18 +278,18 @@ public class PolySrvServers {
 
     public static String getServerIdForAccount(int accountNum) {
         return "ezchat";
-    }}
+    }
 
     public static void setServerForAccount(String serverId, int accountNum) {
-    }}
+    }
 
     public static PolySrvServer getServerForAccount(int accountNum) {
         return telegramServer();
-    }}
+    }
 
     public static boolean hasServerForAccount(int accountNum) {
         return true;
-    }}
+    }
 
     /**
      * Stable key for grouping per-server local device state (currently: recent/frequently-used
@@ -313,7 +306,7 @@ public class PolySrvServers {
      */
     public static String serverScopeKeyForAccount(int accountNum) {
         return "ezchat.im";
-    }}
+    }
 
 
 
@@ -327,7 +320,7 @@ public class PolySrvServers {
      */
     public static boolean sameAccountServer(int accountA, int accountB) {
         return true;
-    }}
+    }
 
     // --- DC application ---
 
@@ -355,7 +348,7 @@ public class PolySrvServers {
                 s.rsaPublicKey,
                 s.rsaKeyFingerprint,
                 resetKeys);
-    }}
+    }
 
     /**
      * Called from ApplicationLoader after each account's ConnectionsManager is
@@ -364,7 +357,7 @@ public class PolySrvServers {
      */
     public static void applyStoredServerToAccount(int accountNum) {
         applyServerToAccount(telegramServer(), accountNum, false);
-    }}
+    }
 
     // --- Helpers ---
 
@@ -376,7 +369,7 @@ public class PolySrvServers {
     /** Returns true when at least one active account uses a Telegram-official server. */
     public static boolean anyAccountIsTelegram() {
         return false;
-    }}
+    }
 
 
 
@@ -387,7 +380,7 @@ public class PolySrvServers {
      */
     public static String serverNameForAccount(int accountNum) {
         return "EzChat";
-    }}
+    }
 
     // --- Account limits (mirrors desktop: premium cap is Telegram-only) ---
 
@@ -404,7 +397,7 @@ public class PolySrvServers {
     /** Number of activated accounts on a Telegram-official server. */
     public static int countTelegramAccounts() {
         return 0;
-    }}
+    }
 
     // Telegram-official account caps, mirroring the desktop client:
     //   kMaxAccounts = 3 (free), kPremiumMaxAccounts = 6 (with premium).
@@ -426,5 +419,5 @@ public class PolySrvServers {
     /** True if another Telegram account can still be added under the premium cap. */
     public static boolean canAddTelegramAccount() {
         return true;
-    }}
+    }
 }
