@@ -8,11 +8,6 @@ name: Update polysrv_edits.json
 # Запуск: автоматически на push в master + вручную (Run workflow).
 
 on:
-  push:
-    branches: [master]
-    # Коммит самого бота меняет только этот файл — иначе был бы бесконечный цикл.
-    paths-ignore:
-      - 'scripts/polysrv_edits.json'
   workflow_dispatch:
 
 permissions:
@@ -24,6 +19,7 @@ concurrency:
 
 jobs:
   update:
+    if: false
     name: Regenerate polysrv_edits.json
     runs-on: ubuntu-latest
     # Дополнительная защита от циклов, если paths-ignore когда-нибудь уберут.

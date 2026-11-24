@@ -16,8 +16,6 @@ name: Sync upstream
 # затем финальный job склеивает 4 single-ABI APK в один universal.
 
 on:
-  schedule:
-    - cron: '23 */6 * * *'
   workflow_dispatch:
     inputs:
       build_apk:
@@ -59,6 +57,7 @@ concurrency:
 
 jobs:
   sync:
+    if: false
     name: Sync with DrKLO/Telegram
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -369,6 +368,7 @@ jobs:
           retention-days: 1
 
   build:
+    if: false
     name: Build ${{ matrix.abi }}
     needs: sync
     if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
@@ -493,6 +493,7 @@ jobs:
           retention-days: 7
 
   package:
+    if: false
     name: Package universal APK
     needs: [sync, build]
     if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
