@@ -1,0 +1,125 @@
+name: Build EzChat Android.
+
+# Run manually from Actions -> "Build EzChat Android." -> "Run workflow".
+on:
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: Build configuration
+        required: true
+        default: Release
+        type: choice
+        options:
+          - Release
+          - Debug
+      abi:
+        description: ABI filter
+        required: true
+        default: universal
+        type: choice
+        options:
+          - universal
+          - arm64-v8a
+          - armeabi-v7a
+          - x86
+          - x86_64
+      upload_artifact:
+        description: Upload the built APK as an artifact
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    name: Android ${{ inputs.configuration }} (${{ inputs.abi }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout EzChat source.
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21.
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle caches.
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          gradle-home-cache-cleanup: true
+
+      - name: Set up Android SDK.
+        run: |
+          set -e
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          SDKMANAGER_BIN="$(dirname "$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -1)")"
+          if [ -z "$SDKMANAGER_BIN" ]; then
+            echo "sdkmanager not found in $ANDROID_HOME/cmdline-tools"
+            ls -R "$ANDROID_HOME/cmdline-tools" | head -20
+            exit 1
+          fi
+          export PATH="$SDKMANAGER_BIN:$ANDROID_HOME/platform-tools:$PATH"
+          echo "$SDKMANAGER_BIN" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          sdkmanager --version
+
+      - name: Install SDK packages.
+        run: |
+          set -e
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null
+          sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" "platforms;android-36" "build-tools;36.0.0" \
+            "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Install and configure ccache.
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ccache
+          {
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+            echo "CCACHE_NOHASHDIR=true"
+            echo "CCACHE_COMPRESS=true"
+            echo "CCACHE_COMPRESSLEVEL=6"
+            echo "CCACHE_MAXSIZE=2G"
+            echo "CCACHE_COMPILERCHECK=content"
+            echo "USE_CCACHE=1"
+          } >> $GITHUB_ENV
+          ccache --version | head -1
+
+      - name: Restore ccache.
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-ezchat-${{ inputs.configuration }}-${{ inputs.abi }}-${{ github.sha }}
+          restore-keys: |
+            ccache-ezchat-${{ inputs.configuration }}-${{ inputs.abi }}-
+            ccache-ezchat-
+
+      - name: Build APK.
+        run: |
+          set -e
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ABI_ARG=""
+          if [ "${{ inputs.abi }}" != "universal" ]; then
+            ABI_ARG="-PabiFilters=${{ inputs.abi }}"
+          fi
+          ./gradlew :TMessagesProj_App:assembleAfat${{ inputs.configuration }} $ABI_ARG --build-cache --stacktrace
+          echo "=== ccache ==="
+          ccache -s || true
+
+      - name: Upload APK.
+        if: ${{ inputs.upload_artifact }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: EzChat-${{ inputs.configuration }}-${{ inputs.abi }}
+          path: TMessagesProj_App/build/outputs/apk/afat/${{ inputs.configuration }}/*.apk
+          if-no-files-found: error
+          retention-days: 7
