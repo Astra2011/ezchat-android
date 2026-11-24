@@ -1,57 +1,19 @@
 {
   "version": 1,
-  "updated": "2026-10-21",
+  "updated": "2026-11-25",
   "servers": [
     {
-      "id": "telegram",
-      "name": "Telegram",
-      "isTelegram": true,
-      "multiDc": true,
-      "mainDcId": 2,
-      "rsaPublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA6LszBcC1LGzyr992NzE0ieY+BSaOW622Aa9Bd4ZHLl+TuFQ4lo4g\n5nKaMBwK/BIb9xUfg0Q29/2mgIR6Zr9krM7HjuIcCzFvDtr+L0GQjae9H0pRB2OO\n62cECs5HKhT5DZ98K33vmWiLowc621dQuwKWSQKjWf50XYFw42h21P2KXUGyp2y/\n+aEyZ+uVgLLQbRA1dEjSDZ2iGRy12Mk5gpYc397aYp438fsJoHIgJ2lgMv5h7WY9\nt6N/byY9Nw9p21Og3AoXSL2q/2IJ1WRUhebgAdGVMlV1fkuOQoEzR7EdpqtQD9Cs\n5+bfo3Nhmcyvk5ftB0WkJ9z6bNZ7yxrP8wIDAQAB\n-----END RSA PUBLIC KEY-----",
-      "rsaKeyFingerprint": -3414540481677951611,
-      "dc": [
-        {
-          "id": 1,
-          "host": "149.154.175.50",
-          "port": 443
-        },
-        {
-          "id": 2,
-          "host": "149.154.167.51",
-          "port": 443
-        },
-        {
-          "id": 3,
-          "host": "149.154.175.100",
-          "port": 443
-        },
-        {
-          "id": 4,
-          "host": "149.154.167.91",
-          "port": 443
-        },
-        {
-          "id": 5,
-          "host": "149.154.171.5",
-          "port": 443
-        }
-      ],
-      "pingManual": true,
-      "online": true,
-      "pingMs": 60
-    },
-    {
-      "id": "test",
-      "name": "Test server",
-      "host": "2.27.98.189",
-      "port": 2498,
-      "isOfficial": true,
+      "id": "ezchat",
+      "name": "EzChat",
+      "description": "EzChat messenger, connected to ezchat.im.",
+      "host": "ezchat.im",
+      "port": 2398,
       "isTelegram": false,
       "multiDc": false,
-      "mainDcId": 2,
-      "rsaPublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAtjWhUFH6KfmrdFySSb3CORowbtVEB1fZd4Cr1eOtAxXFEJcfioy5\np+v4R0LyQmXUH4FcsBT50ECWwj6BdGgpQSprZD51jD+kLVf56/tpGC20kOQyJgmK\n1NnLzVxCao3eMEPC2ZXlgLpB3Q37a+SnhX6zhLvyVJEfs5uom58r9A46K2e8T1Cz\n/UNWWQLMPxN0jt/Xdwz/J3rcggMnVxJ1O+V3RFl9f07Ur+pqFG0mVxRUxKF38N31\n9Wfimwq6syGSaKL4ZoOyGf6v/vqzC4qgb2vMtfmlJ1GDNfpUQjaDo4t/NAIHmhH6\nErfaWIm9PgvRoEGc/YII5DfYRiuj4uFC3wIDAQAB\n-----END RSA PUBLIC KEY-----",
-      "rsaKeyFingerprint": 3032521678109677549
+      "mainDcId": 1,
+      "rsaPublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3\naNoBhnW0QEekPYpUvDqRaHLL3yt92aWxUdeFhLmeabdFU85YSUmZ+Awz7BiKamIA\n93m1w8tI9AttQ/Xv5dtHiQaVA8+zuAQOPZmxF6capvqP59r9NOTrvtLWChxSZIMl\nl8zW5S+G5QZ/vMf1ox8LSitpUI/vWSYSmEDX2BBpi3s4v6hBS+9Jk5J30DS12NjT\nQAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\nodXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n-----END RSA PUBLIC KEY-----",
+      "rsaKeyFingerprint": 1976910966185737688,
+      "dc": []
     }
   ]
 }
