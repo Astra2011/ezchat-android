@@ -28,7 +28,7 @@ FORCE_RULES = {
         (r"^RELEASE_KEY_PASSWORD=.*$", "RELEASE_KEY_PASSWORD=88315900"),
         (r"^RELEASE_KEY_ALIAS=.*$", "RELEASE_KEY_ALIAS=release"),
         (r"^RELEASE_STORE_PASSWORD=.*$", "RELEASE_STORE_PASSWORD=88315900"),
-        (r"^APP_PACKAGE=.*$", "APP_PACKAGE=org.polysrv.messenger"),
+        (r"^APP_PACKAGE=.*$", "APP_PACKAGE=im.ezchat.messenger"),
     ],
 }
 
