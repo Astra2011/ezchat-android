@@ -12,7 +12,7 @@
       "multiDc": false,
       "mainDcId": 1,
       "rsaPublicKey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3\naNoBhnW0QEekPYpUvDqRaHLL3yt92aWxUdeFhLmeabdFU85YSUmZ+Awz7BiKamIA\n93m1w8tI9AttQ/Xv5dtHiQaVA8+zuAQOPZmxF6capvqP59r9NOTrvtLWChxSZIMl\nl8zW5S+G5QZ/vMf1ox8LSitpUI/vWSYSmEDX2BBpi3s4v6hBS+9Jk5J30DS12NjT\nQAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\nodXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n-----END RSA PUBLIC KEY-----",
-      "rsaKeyFingerprint": 1976910966185737688,
+      "rsaKeyFingerprint": -1399974346619280757,
       "dc": []
     }
   ]

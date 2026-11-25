@@ -42,7 +42,7 @@ public class PolySrvServers {
         "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\n" +
         "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n" +
         "-----END RSA PUBLIC KEY-----";
-    static final long TELEGRAM_RSA_FINGERPRINT = 0x1b6f660cb4133dd8L;
+    static final long TELEGRAM_RSA_FINGERPRINT = 0xec924abfc719228bL;
 
     // --- Конфиг серверов (CDN) ---
 

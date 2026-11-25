@@ -348,12 +348,12 @@ uint64_t Handshake::calculatePublicKeyFingerprint(const std::string &pem) {
     BN_bn2bin(n, nBuf.data());
     BN_bn2bin(e, eBuf.data());
 
-    // Сервер (gotd/td) считает SHA1 от СЫРЫХ байтов n и e, без TL-длины
-    // (bin.Buffer.PutBytes). Поэтому пишем именно writeBytes, а не writeByteArray
-    // (тот добавляет префикс длины и ломает совпадение фингерпринта).
+    // MTProto считает отпечаток как младшие 8 байт SHA1 от TL-сериализованных
+    // bytes(n) || bytes(e): префикс длины (1 байт либо 0xFE + 3 байта) и
+    // дополнение до кратного 4 байтам (как MTP_bytes::write в десктоп-клиенте).
     NativeByteBuffer *buffer = BuffersStorage::getInstance().getFreeBuffer((uint32_t) (nLen + eLen + 16));
-    buffer->writeBytes(nBuf.data(), (uint32_t) nLen, nullptr);
-    buffer->writeBytes(eBuf.data(), (uint32_t) eLen, nullptr);
+    buffer->writeByteArray(nBuf.data(), (uint32_t) nLen, nullptr);
+    buffer->writeByteArray(eBuf.data(), (uint32_t) eLen, nullptr);
 
     uint8_t sha1Buffer[20];
     SHA1(buffer->bytes(), buffer->position(), sha1Buffer);
@@ -424,7 +424,7 @@ void Handshake::processHandshakeResponse_resPQ(TLObject *message, int64_t messag
                                                   "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\n"
                                                   "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n"
                                                   "-----END RSA PUBLIC KEY-----");
-                    serverPublicKeysFingerprints.push_back(0x1b6f660cb4133dd8);
+                    serverPublicKeysFingerprints.push_back(0xec924abfc719228bULL);
                 } else {
                     serverPublicKeys.emplace_back("-----BEGIN RSA PUBLIC KEY-----\n"
                                                   "MIIBCgKCAQEAnE5VnML5MLp0/oVqvdoAC0OxNIz9idmJ+n2LAXbbvILO+OKYxFo3\n"
@@ -434,7 +434,7 @@ void Handshake::processHandshakeResponse_resPQ(TLObject *message, int64_t messag
                                                   "QAf5wOvO+SCPeNiXm5W8JD8vCwZirtPHk+WP9DpMoCdnDJixFYlXd9RjA+3dMBOb\n"
                                                   "odXuj4QDR8YO4dM8IL73cLuLYmtw4Z24cwIDAQAB\n"
                                                   "-----END RSA PUBLIC KEY-----");
-                    serverPublicKeysFingerprints.push_back(0x1b6f660cb4133dd8);
+                    serverPublicKeysFingerprints.push_back(0xec924abfc719228bULL);
                 }
             }
 
