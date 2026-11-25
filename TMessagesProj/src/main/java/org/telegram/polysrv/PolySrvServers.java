@@ -356,10 +356,10 @@ public class PolySrvServers {
      * reset auth keys so an already-authorized session keeps working.
      */
     public static void applyStoredServerToAccount(int accountNum) {
-        // EzChat uses a private server key. A cached auth key from an older build or
-        // another server can never be valid here, and a stale key makes every login
-        // request hang in the spinner. Force a fresh handshake on startup.
-        applyServerToAccount(telegramServer(), accountNum, true);
+        // Startup restore: keep the saved auth key so an already-authorized session
+        // survives process restarts. Clearing it here (resetKeys=true) drops the
+        // authorization bound to the key and forces a fresh login on every launch.
+        applyServerToAccount(telegramServer(), accountNum, false);
     }
 
     // --- Helpers ---

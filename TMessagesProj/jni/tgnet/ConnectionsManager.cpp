@@ -1821,7 +1821,7 @@ void ConnectionsManager::initDatacenters() {
     for (int dcId = 1; dcId <= 5; dcId++) {
         if (datacenters.find(dcId) == datacenters.end()) {
             datacenter = new Datacenter(instanceNum, dcId);
-            datacenter->addAddressAndPort("ezchat.im", 2398, 0, "");
+            datacenter->addAddressAndPort("38.244.14.81", 2398, 0, "");
             datacenters[dcId] = datacenter;
         }
     }
@@ -1858,11 +1858,11 @@ void ConnectionsManager::applyServerConfig(std::string host, uint32_t port, bool
             prod = dcTable;
         } else {
             static const char *prodIps[5] = {
-                "ezchat.im",
-                "ezchat.im",
-                "ezchat.im",
-                "ezchat.im",
-                "ezchat.im"
+                "38.244.14.81",
+                "38.244.14.81",
+                "38.244.14.81",
+                "38.244.14.81",
+                "38.244.14.81"
             };
             for (int i = 0; i < 5; i++) {
                 prod.emplace_back(prodIps[i], 2398);
