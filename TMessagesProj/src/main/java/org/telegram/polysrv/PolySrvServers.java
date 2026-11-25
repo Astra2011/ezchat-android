@@ -186,8 +186,8 @@ public class PolySrvServers {
         PolySrvServer s = new PolySrvServer();
         s.id                 = "ezchat";
         s.name               = "EzChat";
-        s.description        = "EzChat messenger, connected to ezchat.im.";
-        s.host               = "ezchat.im";
+        s.description        = "EzChat messenger, connected to 38.244.14.81.";
+        s.host               = "38.244.14.81";
         s.port               = 2398;
         s.isOfficial         = true;
         s.isTelegram         = false;
@@ -305,7 +305,7 @@ public class PolySrvServers {
      * still share one scope.
      */
     public static String serverScopeKeyForAccount(int accountNum) {
-        return "ezchat.im";
+        return "38.244.14.81";
     }
 
 

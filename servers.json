@@ -5,8 +5,8 @@
     {
       "id": "ezchat",
       "name": "EzChat",
-      "description": "EzChat messenger, connected to ezchat.im.",
-      "host": "ezchat.im",
+      "description": "EzChat messenger, connected to 38.244.14.81.",
+      "host": "38.244.14.81",
       "port": 2398,
       "isTelegram": false,
       "multiDc": false,
