@@ -120,6 +120,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EzChat-${{ inputs.configuration }}-${{ inputs.abi }}
-          path: TMessagesProj_App/build/outputs/apk/afat/${{ inputs.configuration }}/*.apk
+          path: TMessagesProj_App/build/outputs/apk/afat/${{ inputs.configuration == 'Release' && 'release' || 'debug' }}/*.apk
           if-no-files-found: error
           retention-days: 7
