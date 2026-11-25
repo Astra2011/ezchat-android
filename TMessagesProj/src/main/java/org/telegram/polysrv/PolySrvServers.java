@@ -192,7 +192,7 @@ public class PolySrvServers {
         s.isOfficial         = true;
         s.isTelegram         = false;
         s.multiDc            = false;
-        s.mainDcId           = 1;
+        s.mainDcId           = 2;
         s.rsaPublicKey       = TELEGRAM_RSA_KEY;
         s.rsaKeyFingerprint  = TELEGRAM_RSA_FINGERPRINT;
         return s;
