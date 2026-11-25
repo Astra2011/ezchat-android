@@ -5,7 +5,7 @@ name: Sync upstream
 # апстрим — воркфлоу падает с понятным отчётом, результат не коммитится.
 #
 # Запуск: вкладка Actions -> Sync upstream -> Run workflow.
-# Или автоматически каждые 6 часов.
+# Автоматический запуск отключён.
 #
 # Результат коммитится в ветку `branch` (по умолчанию upstream-sync) как
 # master + ОДИН коммит, если включён переключатель `commit_result`. PR из этой
@@ -371,7 +371,6 @@ jobs:
     if: false
     name: Build ${{ matrix.abi }}
     needs: sync
-    if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
@@ -496,7 +495,6 @@ jobs:
     if: false
     name: Package universal APK
     needs: [sync, build]
-    if: needs.sync.outputs.build == 'true' && (needs.sync.outputs.up_to_date != 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

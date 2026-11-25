@@ -5,7 +5,7 @@ name: Update polysrv_edits.json
 # sync-upstream.yml падает на шаге "Check that polysrv_edits.json is up to date",
 # а в сборку уезжает устаревший набор замен.
 #
-# Запуск: автоматически на push в master + вручную (Run workflow).
+# Запуск отключён: upstream-синхронизация не используется.
 
 on:
   workflow_dispatch:
@@ -22,8 +22,6 @@ jobs:
     if: false
     name: Regenerate polysrv_edits.json
     runs-on: ubuntu-latest
-    # Дополнительная защита от циклов, если paths-ignore когда-нибудь уберут.
-    if: github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
