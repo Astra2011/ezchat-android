@@ -351,6 +351,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     private FragmentFloatingButton floatingButton;
     private VerticalPositionAutoAnimator floatingAutoAnimator;
     private int progressRequestId;
+    private Runnable progressTimeoutRunnable;
+    private static final long PROGRESS_TIMEOUT_MS = 45000;
     private boolean[] doneButtonVisible = new boolean[] {true, false};
 
     private AlertDialog cancelDeleteProgressDialog;
@@ -1478,6 +1480,27 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
         progressRequestId = requestId;
         showEditDoneProgress(true, animated);
+        if (requestId != 0) {
+            scheduleProgressTimeout();
+        }
+    }
+
+    private void scheduleProgressTimeout() {
+        cancelProgressTimeout();
+        progressTimeoutRunnable = () -> {
+            if (progressRequestId != 0 && getParentActivity() != null && !getParentActivity().isFinishing()) {
+                needHideProgress(true);
+                needShowAlert(LocaleController.getString(R.string.AppName), LocaleController.getString(R.string.EzChatServerNoResponse));
+            }
+        };
+        AndroidUtilities.runOnUIThread(progressTimeoutRunnable, PROGRESS_TIMEOUT_MS);
+    }
+
+    private void cancelProgressTimeout() {
+        if (progressTimeoutRunnable != null) {
+            AndroidUtilities.cancelRunOnUIThread(progressTimeoutRunnable);
+            progressTimeoutRunnable = null;
+        }
     }
 
     private void needHideProgress(boolean cancel) {
@@ -1485,6 +1508,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     }
 
     private void needHideProgress(boolean cancel, boolean animated) {
+        cancelProgressTimeout();
         if (progressRequestId != 0) {
             if (cancel) {
                 ConnectionsManager.getInstance(currentAccount).cancelRequest(progressRequestId, true);

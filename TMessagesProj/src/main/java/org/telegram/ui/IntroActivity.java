@@ -394,32 +394,15 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         switchLanguageTextView = new TextView(context);
         switchLanguageTextView.setGravity(Gravity.CENTER);
         switchLanguageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        // Language selection must work before login and without a server round-trip:
+        // the server does not necessarily provide langpack.getStrings / getLanguages.
+        switchLanguageTextView.setText(LocaleController.getString(R.string.ChooseYourLanguage));
         frameContainerView.addView(switchLanguageTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 30, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 20));
         switchLanguageTextView.setOnClickListener(v -> {
-            if (startPressed || localeInfo == null) {
+            if (startPressed) {
                 return;
             }
-            startPressed = true;
-
-            AlertDialog loaderDialog = new AlertDialog(v.getContext(), AlertDialog.ALERT_TYPE_SPINNER);
-            loaderDialog.setCanCancel(false);
-            loaderDialog.showDelayed(1000);
-
-            NotificationCenter.getGlobalInstance().addObserver(new NotificationCenter.NotificationCenterDelegate() {
-                @Override
-                public void didReceivedNotification(int id, int account, Object... args) {
-                    if (id == NotificationCenter.reloadInterface) {
-                        loaderDialog.dismiss();
-
-                        NotificationCenter.getGlobalInstance().removeObserver(this, id);
-                        AndroidUtilities.runOnUIThread(()->{
-                            presentFragment(new LoginActivity(), true);
-                            destroyed = true;
-                        }, 100);
-                    }
-                }
-            }, NotificationCenter.reloadInterface);
-            LocaleController.getInstance().applyLanguage(localeInfo, true, false, currentAccount);
+            presentFragment(new LanguageSelectActivity());
         });
 
         frameContainerView.addView(themeFrameLayout, LayoutHelper.createFrame(64, 64, Gravity.TOP | Gravity.RIGHT, 0, themeMargin, themeMargin, 0));
@@ -430,7 +413,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.configLoaded);
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         LocaleController.getInstance().loadRemoteLanguages(currentAccount);
-        checkContinueText();
         justCreated = true;
 
         updateColors(false);
@@ -536,9 +518,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.suggestedLangpack || id == NotificationCenter.configLoaded) {
-            checkContinueText();
-        }
     }
 
     public IntroActivity setOnLogout() {
