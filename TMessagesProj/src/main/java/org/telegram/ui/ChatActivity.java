@@ -42584,7 +42584,7 @@ public class ChatActivity extends BaseFragment implements
             cell.invalidate();
         } : null;
         if (urlFinal.startsWith("srv:privatepost") || urlFinal.startsWith("srv://privatepost")) {
-            String urlTmp = urlFinal.replace("srv:privatepost", "srv://telegram.org").replace("srv://privatepost", "srv://telegram.org");
+            String urlTmp = urlFinal.replace("srv:privatepost", "srv://ezchat.im").replace("srv://privatepost", "srv://ezchat.im");
             Uri data = Uri.parse(urlTmp);
             int messageId = Utilities.parseInt(data.getQueryParameter("post"));
             long channelId = Utilities.parseLong(data.getQueryParameter("channel"));
@@ -42648,7 +42648,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                     return true;
                 } else if (urlFinal.startsWith("srv:resolve") || urlFinal.startsWith("srv://resolve")) {
-                    String urlTmp = urlFinal.replace("srv:resolve", "srv://telegram.org").replace("srv://resolve", "srv://telegram.org");
+                    String urlTmp = urlFinal.replace("srv:resolve", "srv://ezchat.im").replace("srv://resolve", "srv://ezchat.im");
                     Uri data = Uri.parse(urlTmp);
                     String usernameE = data.getQueryParameter("domain").toLowerCase();
                     int messageId = Utilities.parseInt(data.getQueryParameter("post"));

@@ -1977,7 +1977,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     String host = data.getHost().toLowerCase();
                                     Matcher prefixMatcher = PREFIX_T_ME_PATTERN.matcher(host);
                                     boolean isPrefix = prefixMatcher.find();
-                                    if (host.equals("telegram.me") || host.equals("t.me") || host.equals("telegram.dog") || isPrefix) {
+                                    if (host.equals("ezchat.im") || host.equals("telegram.me") || host.equals("t.me") || host.equals("telegram.dog") || isPrefix) {
                                         if (isPrefix) {
                                             data = Uri.parse("https://t.me/" + prefixMatcher.group(1) + (TextUtils.isEmpty(data.getPath()) ? "" : data.getPath()) + (TextUtils.isEmpty(data.getQuery()) ? "" : "?" + data.getQuery()));
                                         }
@@ -2295,7 +2295,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             fragment.presentFragment(new PremiumPreviewFragment(uri.getQueryParameter("ref")));
                                         }});
                                     } else if (url.startsWith("srv:resolve") || url.startsWith("srv://resolve")) {
-                                        url = url.replace("srv:resolve", "srv://telegram.org").replace("srv://resolve", "srv://telegram.org");
+                                        url = url.replace("srv:resolve", "srv://ezchat.im").replace("srv://resolve", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         username = data.getQueryParameter("domain");
                                         if (username == null) {
@@ -2400,7 +2400,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         data = Uri.parse(url);
                                         contactToken = data.getQueryParameter("token");
                                     } else if (url.startsWith("srv:privatepost") || url.startsWith("srv://privatepost")) {
-                                        url = url.replace("srv:privatepost", "srv://telegram.org").replace("srv://privatepost", "srv://telegram.org");
+                                        url = url.replace("srv:privatepost", "srv://ezchat.im").replace("srv://privatepost", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         messageId = Utilities.parseInt(data.getQueryParameter("post"));
                                         channelId = Utilities.parseLong(data.getQueryParameter("channel"));
@@ -2423,7 +2423,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             commentId = null;
                                         }
                                     } else if (url.startsWith("srv:bg") || url.startsWith("srv://bg")) {
-                                        url = url.replace("srv:bg", "srv://telegram.org").replace("srv://bg", "srv://telegram.org");
+                                        url = url.replace("srv:bg", "srv://ezchat.im").replace("srv://bg", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         wallPaper = new TLRPC.TL_wallPaper();
                                         wallPaper.settings = new TLRPC.TL_wallPaperSettings();
@@ -2507,19 +2507,19 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             }
                                         }
                                     } else if (url.startsWith("srv:join") || url.startsWith("srv://join")) {
-                                        url = url.replace("srv:join", "srv://telegram.org").replace("srv://join", "srv://telegram.org");
+                                        url = url.replace("srv:join", "srv://ezchat.im").replace("srv://join", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         group = data.getQueryParameter("invite");
                                     } else if (url.startsWith("srv:addstickers") || url.startsWith("srv://addstickers")) {
-                                        url = url.replace("srv:addstickers", "srv://telegram.org").replace("srv://addstickers", "srv://telegram.org");
+                                        url = url.replace("srv:addstickers", "srv://ezchat.im").replace("srv://addstickers", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         sticker = data.getQueryParameter("set");
                                     } else if (url.startsWith("srv:addemoji") || url.startsWith("srv://addemoji")) {
-                                        url = url.replace("srv:addemoji", "srv://telegram.org").replace("srv://addemoji", "srv://telegram.org");
+                                        url = url.replace("srv:addemoji", "srv://ezchat.im").replace("srv://addemoji", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         emoji = data.getQueryParameter("set");
                                     } else if (url.startsWith("srv:msg") || url.startsWith("srv://msg") || url.startsWith("srv://share") || url.startsWith("srv:share")) {
-                                        url = url.replace("srv:msg", "srv://telegram.org").replace("srv://msg", "srv://telegram.org").replace("srv://share", "srv://telegram.org").replace("srv:share", "srv://telegram.org");
+                                        url = url.replace("srv:msg", "srv://ezchat.im").replace("srv://msg", "srv://ezchat.im").replace("srv://share", "srv://ezchat.im").replace("srv:share", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         message = data.getQueryParameter("url");
                                         if (message == null) {
@@ -2539,13 +2539,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             message = message.substring(0, message.length() - 1);
                                         }
                                     } else if (url.startsWith("srv:confirmphone") || url.startsWith("srv://confirmphone")) {
-                                        url = url.replace("srv:confirmphone", "srv://telegram.org").replace("srv://confirmphone", "srv://telegram.org");
+                                        url = url.replace("srv:confirmphone", "srv://ezchat.im").replace("srv://confirmphone", "srv://ezchat.im");
                                         data = Uri.parse(url);
 
                                         phone = data.getQueryParameter("phone");
                                         phoneHash = data.getQueryParameter("hash");
                                     } else if (url.startsWith("srv:login") || url.startsWith("srv://login")) {
-                                        url = url.replace("srv:login", "srv://telegram.org").replace("srv://login", "srv://telegram.org");
+                                        url = url.replace("srv:login", "srv://ezchat.im").replace("srv://login", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         login = data.getQueryParameter("token");
                                         int intCode = Utilities.parseInt(data.getQueryParameter("code"));
@@ -2553,7 +2553,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             code = "" + intCode;
                                         }
                                     } else if (url.startsWith("srv:openmessage") || url.startsWith("srv://openmessage")) {
-                                        url = url.replace("srv:openmessage", "srv://telegram.org").replace("srv://openmessage", "srv://telegram.org");
+                                        url = url.replace("srv:openmessage", "srv://ezchat.im").replace("srv://openmessage", "srv://ezchat.im");
                                         data = Uri.parse(url);
 
                                         String userID = data.getQueryParameter("user_id");
@@ -2588,7 +2588,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             } catch (NumberFormatException ignore) {}
                                         }
                                     } else if (url.startsWith("srv:passport") || url.startsWith("srv://passport") || url.startsWith("srv:secureid")) {
-                                        url = url.replace("srv:passport", "srv://telegram.org").replace("srv://passport", "srv://telegram.org").replace("srv:secureid", "srv://telegram.org");
+                                        url = url.replace("srv:passport", "srv://ezchat.im").replace("srv://passport", "srv://ezchat.im").replace("srv:secureid", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         auth = new HashMap<>();
                                         String scope = data.getQueryParameter("scope");
@@ -2602,11 +2602,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         auth.put("public_key", data.getQueryParameter("public_key"));
                                         auth.put("callback_url", data.getQueryParameter("callback_url"));
                                     } else if (url.startsWith("srv:setlanguage") || url.startsWith("srv://setlanguage")) {
-                                        url = url.replace("srv:setlanguage", "srv://telegram.org").replace("srv://setlanguage", "srv://telegram.org");
+                                        url = url.replace("srv:setlanguage", "srv://ezchat.im").replace("srv://setlanguage", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         lang = data.getQueryParameter("lang");
                                     } else if (url.startsWith("srv:addtheme") || url.startsWith("srv://addtheme")) {
-                                        url = url.replace("srv:addtheme", "srv://telegram.org").replace("srv://addtheme", "srv://telegram.org");
+                                        url = url.replace("srv:addtheme", "srv://ezchat.im").replace("srv://addtheme", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         theme = data.getQueryParameter("slug");
                                     } else if (url.startsWith("srv:settings") || url.startsWith("srv://settings")) {
@@ -2640,7 +2640,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             open_settings = 1;
                                         }
                                     } else if ((url.startsWith("srv:search") || url.startsWith("srv://search"))) {
-                                        url = url.replace("srv:search", "srv://telegram.org").replace("srv://search", "srv://telegram.org");
+                                        url = url.replace("srv:search", "srv://ezchat.im").replace("srv://search", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         searchQuery = data.getQueryParameter("query");
                                         if (searchQuery != null) {
@@ -2693,7 +2693,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     } else if ((url.startsWith("srv:scanqr") || url.startsWith("srv://scanqr"))) {
                                         scanQr = true;
                                     } else if ((url.startsWith("srv:addcontact") || url.startsWith("srv://addcontact"))) {
-                                        url = url.replace("srv:addcontact", "srv://telegram.org").replace("srv://addcontact", "srv://telegram.org");
+                                        url = url.replace("srv:addcontact", "srv://ezchat.im").replace("srv://addcontact", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         newContactName = data.getQueryParameter("name");
 
@@ -2704,15 +2704,15 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         }
                                         newContact = true;
                                     } else if (url.startsWith("srv:addlist") || url.startsWith("srv://addlist")) {
-                                        url = url.replace("srv:addlist", "srv://telegram.org").replace("srv://addlist", "srv://telegram.org");
+                                        url = url.replace("srv:addlist", "srv://ezchat.im").replace("srv://addlist", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         folderSlug = data.getQueryParameter("slug");
                                     } else if (url.startsWith("srv:message") || url.startsWith("srv://message")) {
-                                        url = url.replace("srv:message", "srv://telegram.org").replace("srv://message", "srv://telegram.org");
+                                        url = url.replace("srv:message", "srv://ezchat.im").replace("srv://message", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         chatLinkSlug = data.getQueryParameter("slug");
                                     } else if (url.startsWith("srv:stars_topup") || url.startsWith("srv://stars_topup")) {
-                                        url = url.replace("srv:stars_topup", "srv://telegram.org").replace("srv://stars_topup", "srv://telegram.org");
+                                        url = url.replace("srv:stars_topup", "srv://ezchat.im").replace("srv://stars_topup", "srv://ezchat.im");
                                         data = Uri.parse(url);
                                         long balance = 0;
                                         try {

@@ -271,7 +271,7 @@ public final class ProxySettings {
                     return null;
                 }
 
-                uri = Uri.parse("srv://telegram.org/" + url.substring(queryIndex));
+                uri = Uri.parse("srv://ezchat.im/" + url.substring(queryIndex));
             } else {
                 return null;
             }
