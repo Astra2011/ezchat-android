@@ -42583,8 +42583,8 @@ public class ChatActivity extends BaseFragment implements
             progressDialogLinkSpan = span;
             cell.invalidate();
         } : null;
-        if (urlFinal.startsWith("srv:privatepost") || urlFinal.startsWith("srv://privatepost")) {
-            String urlTmp = urlFinal.replace("srv:privatepost", "srv://ezchat.im").replace("srv://privatepost", "srv://ezchat.im");
+        if (urlFinal.startsWith("ez:privatepost") || urlFinal.startsWith("ez://privatepost")) {
+            String urlTmp = urlFinal.replace("ez:privatepost", "ez://ezchat.im").replace("ez://privatepost", "ez://ezchat.im");
             Uri data = Uri.parse(urlTmp);
             int messageId = Utilities.parseInt(data.getQueryParameter("post"));
             long channelId = Utilities.parseLong(data.getQueryParameter("channel"));
@@ -42647,8 +42647,8 @@ public class ChatActivity extends BaseFragment implements
                         }
                     }
                     return true;
-                } else if (urlFinal.startsWith("srv:resolve") || urlFinal.startsWith("srv://resolve")) {
-                    String urlTmp = urlFinal.replace("srv:resolve", "srv://ezchat.im").replace("srv://resolve", "srv://ezchat.im");
+                } else if (urlFinal.startsWith("ez:resolve") || urlFinal.startsWith("ez://resolve")) {
+                    String urlTmp = urlFinal.replace("ez:resolve", "ez://ezchat.im").replace("ez://resolve", "ez://ezchat.im");
                     Uri data = Uri.parse(urlTmp);
                     String usernameE = data.getQueryParameter("domain").toLowerCase();
                     int messageId = Utilities.parseInt(data.getQueryParameter("post"));
@@ -44962,7 +44962,7 @@ public class ChatActivity extends BaseFragment implements
             }
         });
 
-        if (inAppBrowser && !isHashtag && !isMail && !str.startsWith("srv:")) {
+        if (inAppBrowser && !isHashtag && !isMail && !str.startsWith("ez:")) {
             options.add(R.drawable.outline_saved_24, getString(R.string.WebBookmarkAdd), () -> {
                 ArticleViewer.addBookmark(str, currentAccount, contentView, null, themeDelegate);
             });

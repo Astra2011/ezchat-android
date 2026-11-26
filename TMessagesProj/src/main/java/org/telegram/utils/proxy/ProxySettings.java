@@ -253,14 +253,14 @@ public final class ProxySettings {
                 } else {
                     return null;
                 }
-            } else if (scheme.equalsIgnoreCase("tg") || scheme.equalsIgnoreCase("srv")) {
+            } else if (scheme.equalsIgnoreCase("ez") || scheme.equalsIgnoreCase("ez")) {
                 String url = uri.toString();
 
-                if (url.startsWith("srv://socks") || url.startsWith("srv:socks")) {
+                if (url.startsWith("ez://socks") || url.startsWith("ez:socks")) {
                     type = Type.SOCKS5;
-                } else if (url.startsWith("srv://proxy") || url.startsWith("srv:proxy")) {
+                } else if (url.startsWith("ez://proxy") || url.startsWith("ez:proxy")) {
                     type = Type.MTPROTO;
-                } else if (url.startsWith("srv://webproxy") || url.startsWith("srv:webproxy")) {
+                } else if (url.startsWith("ez://webproxy") || url.startsWith("ez:webproxy")) {
                     type = Type.WEB;
                 } else {
                     return null;
@@ -271,7 +271,7 @@ public final class ProxySettings {
                     return null;
                 }
 
-                uri = Uri.parse("srv://ezchat.im/" + url.substring(queryIndex));
+                uri = Uri.parse("ez://ezchat.im/" + url.substring(queryIndex));
             } else {
                 return null;
             }

@@ -174,7 +174,7 @@ public class PaymentFormActivity extends BaseFragment implements NotificationCen
     );
     private final static List<String> BLACKLISTED_PROTOCOLS = Arrays.asList(
             "tg",
-            "srv"
+            "ez"
     );
 
     private final static int STEP_SHIPPING_INFORMATION = 0,

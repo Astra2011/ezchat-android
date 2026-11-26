@@ -425,9 +425,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     Uri uri = intent.getData();
                     if (uri != null) {
                         String url = uri.toString().toLowerCase();
-                        isProxy = url.startsWith("srv:proxy") || url.startsWith("srv://proxy")
-                                || url.startsWith("srv:webproxy") || url.startsWith("srv://webproxy")
-                                || url.startsWith("srv:socks") || url.startsWith("srv://socks");
+                        isProxy = url.startsWith("ez:proxy") || url.startsWith("ez://proxy")
+                                || url.startsWith("ez:webproxy") || url.startsWith("ez://webproxy")
+                                || url.startsWith("ez:socks") || url.startsWith("ez://socks");
                     }
                 }
             }
@@ -2283,10 +2283,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     }
                                     break;
                                 }
-                                case "tg":
-                                case "srv": {
+                                case "ez":
+                                case "ez": {
                                     String url = data.toString();
-                                    if (url.startsWith("srv:premium_offer") || url.startsWith("srv://premium_offer")) {
+                                    if (url.startsWith("ez:premium_offer") || url.startsWith("ez://premium_offer")) {
                                         String finalUrl = url;
                                         AndroidUtilities.runOnUIThread(() -> {
                                         if (!actionBarLayout.getFragmentStack().isEmpty()) {
@@ -2294,8 +2294,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             Uri uri = Uri.parse(finalUrl);
                                             fragment.presentFragment(new PremiumPreviewFragment(uri.getQueryParameter("ref")));
                                         }});
-                                    } else if (url.startsWith("srv:resolve") || url.startsWith("srv://resolve")) {
-                                        url = url.replace("srv:resolve", "srv://ezchat.im").replace("srv://resolve", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:resolve") || url.startsWith("ez://resolve")) {
+                                        url = url.replace("ez:resolve", "ez://ezchat.im").replace("ez://resolve", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         username = data.getQueryParameter("domain");
                                         if (username == null) {
@@ -2383,24 +2383,24 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 }
                                             }
                                         }
-                                    } else if (url.startsWith("srv:invoice") || url.startsWith("srv://invoice")) {
-                                        url = url.replace("srv:invoice", "srv://invoice");
+                                    } else if (url.startsWith("ez:invoice") || url.startsWith("ez://invoice")) {
+                                        url = url.replace("ez:invoice", "ez://invoice");
                                         data = Uri.parse(url);
                                         inputInvoiceSlug = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:stargift_auction") || url.startsWith("srv://stargift_auction")) {
-                                        url = url.replace("srv:stargift_auction", "srv://stargift_auction");
+                                    } else if (url.startsWith("ez:stargift_auction") || url.startsWith("ez://stargift_auction")) {
+                                        url = url.replace("ez:stargift_auction", "ez://stargift_auction");
                                         data = Uri.parse(url);
                                         auctionSlug = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:nft") || url.startsWith("srv://nft")) {
-                                        url = url.replace("srv:nft", "srv://nft");
+                                    } else if (url.startsWith("ez:nft") || url.startsWith("ez://nft")) {
+                                        url = url.replace("ez:nft", "ez://nft");
                                         data = Uri.parse(url);
                                         uniqueGiftSlug = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:contact") || url.startsWith("srv://contact")) {
-                                        url = url.replace("srv:contact", "srv://contact");
+                                    } else if (url.startsWith("ez:contact") || url.startsWith("ez://contact")) {
+                                        url = url.replace("ez:contact", "ez://contact");
                                         data = Uri.parse(url);
                                         contactToken = data.getQueryParameter("token");
-                                    } else if (url.startsWith("srv:privatepost") || url.startsWith("srv://privatepost")) {
-                                        url = url.replace("srv:privatepost", "srv://ezchat.im").replace("srv://privatepost", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:privatepost") || url.startsWith("ez://privatepost")) {
+                                        url = url.replace("ez:privatepost", "ez://ezchat.im").replace("ez://privatepost", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         messageId = Utilities.parseInt(data.getQueryParameter("post"));
                                         channelId = Utilities.parseLong(data.getQueryParameter("channel"));
@@ -2422,8 +2422,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         if (commentId == 0) {
                                             commentId = null;
                                         }
-                                    } else if (url.startsWith("srv:bg") || url.startsWith("srv://bg")) {
-                                        url = url.replace("srv:bg", "srv://ezchat.im").replace("srv://bg", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:bg") || url.startsWith("ez://bg")) {
+                                        url = url.replace("ez:bg", "ez://ezchat.im").replace("ez://bg", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         wallPaper = new TLRPC.TL_wallPaper();
                                         wallPaper.settings = new TLRPC.TL_wallPaperSettings();
@@ -2506,20 +2506,20 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
                                             }
                                         }
-                                    } else if (url.startsWith("srv:join") || url.startsWith("srv://join")) {
-                                        url = url.replace("srv:join", "srv://ezchat.im").replace("srv://join", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:join") || url.startsWith("ez://join")) {
+                                        url = url.replace("ez:join", "ez://ezchat.im").replace("ez://join", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         group = data.getQueryParameter("invite");
-                                    } else if (url.startsWith("srv:addstickers") || url.startsWith("srv://addstickers")) {
-                                        url = url.replace("srv:addstickers", "srv://ezchat.im").replace("srv://addstickers", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:addstickers") || url.startsWith("ez://addstickers")) {
+                                        url = url.replace("ez:addstickers", "ez://ezchat.im").replace("ez://addstickers", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         sticker = data.getQueryParameter("set");
-                                    } else if (url.startsWith("srv:addemoji") || url.startsWith("srv://addemoji")) {
-                                        url = url.replace("srv:addemoji", "srv://ezchat.im").replace("srv://addemoji", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:addemoji") || url.startsWith("ez://addemoji")) {
+                                        url = url.replace("ez:addemoji", "ez://ezchat.im").replace("ez://addemoji", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         emoji = data.getQueryParameter("set");
-                                    } else if (url.startsWith("srv:msg") || url.startsWith("srv://msg") || url.startsWith("srv://share") || url.startsWith("srv:share")) {
-                                        url = url.replace("srv:msg", "srv://ezchat.im").replace("srv://msg", "srv://ezchat.im").replace("srv://share", "srv://ezchat.im").replace("srv:share", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:msg") || url.startsWith("ez://msg") || url.startsWith("ez://share") || url.startsWith("ez:share")) {
+                                        url = url.replace("ez:msg", "ez://ezchat.im").replace("ez://msg", "ez://ezchat.im").replace("ez://share", "ez://ezchat.im").replace("ez:share", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         message = data.getQueryParameter("url");
                                         if (message == null) {
@@ -2538,22 +2538,22 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         while (message.endsWith("\n")) {
                                             message = message.substring(0, message.length() - 1);
                                         }
-                                    } else if (url.startsWith("srv:confirmphone") || url.startsWith("srv://confirmphone")) {
-                                        url = url.replace("srv:confirmphone", "srv://ezchat.im").replace("srv://confirmphone", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:confirmphone") || url.startsWith("ez://confirmphone")) {
+                                        url = url.replace("ez:confirmphone", "ez://ezchat.im").replace("ez://confirmphone", "ez://ezchat.im");
                                         data = Uri.parse(url);
 
                                         phone = data.getQueryParameter("phone");
                                         phoneHash = data.getQueryParameter("hash");
-                                    } else if (url.startsWith("srv:login") || url.startsWith("srv://login")) {
-                                        url = url.replace("srv:login", "srv://ezchat.im").replace("srv://login", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:login") || url.startsWith("ez://login")) {
+                                        url = url.replace("ez:login", "ez://ezchat.im").replace("ez://login", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         login = data.getQueryParameter("token");
                                         int intCode = Utilities.parseInt(data.getQueryParameter("code"));
                                         if (intCode != 0) {
                                             code = "" + intCode;
                                         }
-                                    } else if (url.startsWith("srv:openmessage") || url.startsWith("srv://openmessage")) {
-                                        url = url.replace("srv:openmessage", "srv://ezchat.im").replace("srv://openmessage", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:openmessage") || url.startsWith("ez://openmessage")) {
+                                        url = url.replace("ez:openmessage", "ez://ezchat.im").replace("ez://openmessage", "ez://ezchat.im");
                                         data = Uri.parse(url);
 
                                         String userID = data.getQueryParameter("user_id");
@@ -2587,8 +2587,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 }
                                             } catch (NumberFormatException ignore) {}
                                         }
-                                    } else if (url.startsWith("srv:passport") || url.startsWith("srv://passport") || url.startsWith("srv:secureid")) {
-                                        url = url.replace("srv:passport", "srv://ezchat.im").replace("srv://passport", "srv://ezchat.im").replace("srv:secureid", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:passport") || url.startsWith("ez://passport") || url.startsWith("ez:secureid")) {
+                                        url = url.replace("ez:passport", "ez://ezchat.im").replace("ez://passport", "ez://ezchat.im").replace("ez:secureid", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         auth = new HashMap<>();
                                         String scope = data.getQueryParameter("scope");
@@ -2601,15 +2601,15 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         auth.put("scope", scope);
                                         auth.put("public_key", data.getQueryParameter("public_key"));
                                         auth.put("callback_url", data.getQueryParameter("callback_url"));
-                                    } else if (url.startsWith("srv:setlanguage") || url.startsWith("srv://setlanguage")) {
-                                        url = url.replace("srv:setlanguage", "srv://ezchat.im").replace("srv://setlanguage", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:setlanguage") || url.startsWith("ez://setlanguage")) {
+                                        url = url.replace("ez:setlanguage", "ez://ezchat.im").replace("ez://setlanguage", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         lang = data.getQueryParameter("lang");
-                                    } else if (url.startsWith("srv:addtheme") || url.startsWith("srv://addtheme")) {
-                                        url = url.replace("srv:addtheme", "srv://ezchat.im").replace("srv://addtheme", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:addtheme") || url.startsWith("ez://addtheme")) {
+                                        url = url.replace("ez:addtheme", "ez://ezchat.im").replace("ez://addtheme", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         theme = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:settings") || url.startsWith("srv://settings")) {
+                                    } else if (url.startsWith("ez:settings") || url.startsWith("ez://settings")) {
                                         if (url.contains("themes") || url.contains("theme")) {
                                             open_settings = 2;
                                         } else if (url.contains("devices")) {
@@ -2639,8 +2639,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         } else {
                                             open_settings = 1;
                                         }
-                                    } else if ((url.startsWith("srv:search") || url.startsWith("srv://search"))) {
-                                        url = url.replace("srv:search", "srv://ezchat.im").replace("srv://search", "srv://ezchat.im");
+                                    } else if ((url.startsWith("ez:search") || url.startsWith("ez://search"))) {
+                                        url = url.replace("ez:search", "ez://ezchat.im").replace("ez://search", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         searchQuery = data.getQueryParameter("query");
                                         if (searchQuery != null) {
@@ -2648,9 +2648,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         } else {
                                             searchQuery = "";
                                         }
-                                    } else if ((url.startsWith("srv:calllog") || url.startsWith("srv://calllog"))) {
+                                    } else if ((url.startsWith("ez:calllog") || url.startsWith("ez://calllog"))) {
                                         showCallLog = true;
-                                    } else if ((url.startsWith("srv:call") || url.startsWith("srv://call"))) {
+                                    } else if ((url.startsWith("ez:call") || url.startsWith("ez://call"))) {
                                         if (UserConfig.getInstance(currentAccount).isClientActivated()) {
                                             final String extraForceCall = "extra_force_call";
                                             final String slug = data.getQueryParameter("slug");
@@ -2690,10 +2690,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                 ContactsLoadingObserver.observe((contactsLoaded) -> handleIntent(copyIntent, true, false, false), 1000);
                                             }
                                         }
-                                    } else if ((url.startsWith("srv:scanqr") || url.startsWith("srv://scanqr"))) {
+                                    } else if ((url.startsWith("ez:scanqr") || url.startsWith("ez://scanqr"))) {
                                         scanQr = true;
-                                    } else if ((url.startsWith("srv:addcontact") || url.startsWith("srv://addcontact"))) {
-                                        url = url.replace("srv:addcontact", "srv://ezchat.im").replace("srv://addcontact", "srv://ezchat.im");
+                                    } else if ((url.startsWith("ez:addcontact") || url.startsWith("ez://addcontact"))) {
+                                        url = url.replace("ez:addcontact", "ez://ezchat.im").replace("ez://addcontact", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         newContactName = data.getQueryParameter("name");
 
@@ -2703,16 +2703,16 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             newContactPhone = phoneParams.get(0);
                                         }
                                         newContact = true;
-                                    } else if (url.startsWith("srv:addlist") || url.startsWith("srv://addlist")) {
-                                        url = url.replace("srv:addlist", "srv://ezchat.im").replace("srv://addlist", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:addlist") || url.startsWith("ez://addlist")) {
+                                        url = url.replace("ez:addlist", "ez://ezchat.im").replace("ez://addlist", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         folderSlug = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:message") || url.startsWith("srv://message")) {
-                                        url = url.replace("srv:message", "srv://ezchat.im").replace("srv://message", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:message") || url.startsWith("ez://message")) {
+                                        url = url.replace("ez:message", "ez://ezchat.im").replace("ez://message", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         chatLinkSlug = data.getQueryParameter("slug");
-                                    } else if (url.startsWith("srv:stars_topup") || url.startsWith("srv://stars_topup")) {
-                                        url = url.replace("srv:stars_topup", "srv://ezchat.im").replace("srv://stars_topup", "srv://ezchat.im");
+                                    } else if (url.startsWith("ez:stars_topup") || url.startsWith("ez://stars_topup")) {
+                                        url = url.replace("ez:stars_topup", "ez://ezchat.im").replace("ez://stars_topup", "ez://ezchat.im");
                                         data = Uri.parse(url);
                                         long balance = 0;
                                         try {
@@ -2723,19 +2723,19 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         }
                                         String purpose = data.getQueryParameter("purpose");
                                         StarsController.getInstance(intentAccount[0]).showStarsTopup(this, balance, purpose);
-                                    } else if (url.startsWith("srv:ton") || url.startsWith("srv://ton")) {
+                                    } else if (url.startsWith("ez:ton") || url.startsWith("ez://ton")) {
                                         if (progress != null) {
                                             progress.end();
                                         }
                                         presentFragment(new TONIntroActivity());
                                         return pushOpened;
-                                    } else if (url.startsWith("srv:stars") || url.startsWith("srv://stars")) {
+                                    } else if (url.startsWith("ez:stars") || url.startsWith("ez://stars")) {
                                         if (progress != null) {
                                             progress.end();
                                         }
                                         presentFragment(new StarsIntroActivity());
                                         return pushOpened;
-                                    } else if (url.startsWith("srv:send_gift") || url.startsWith("srv://send_gift")) {
+                                    } else if (url.startsWith("ez:send_gift") || url.startsWith("ez://send_gift")) {
                                         final String to = data.getQueryParameter("to");
                                         if (TextUtils.isEmpty(to)) {
                                             if (progress != null) {
@@ -2797,7 +2797,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
                                         return pushOpened;
                                     } else {
-                                        unsupportedUrl = url.replace("srv://", "").replace("srv:", "");
+                                        unsupportedUrl = url.replace("ez://", "").replace("ez:", "");
                                         int index;
                                         if ((index = unsupportedUrl.indexOf('?')) >= 0) {
                                             unsupportedUrl = unsupportedUrl.substring(0, index);
@@ -2808,7 +2808,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                             }
                         }
                         if (intent.hasExtra(EXTRA_ACTION_TOKEN)) {
-                            final boolean success = UserConfig.getInstance(currentAccount).isClientActivated() && ("tg".equals(scheme) || "srv".equals(scheme)) && unsupportedUrl == null;
+                            final boolean success = UserConfig.getInstance(currentAccount).isClientActivated() && ("ez".equals(scheme)) && unsupportedUrl == null;
                             final Action assistAction = new AssistActionBuilder()
                                     .setActionToken(intent.getStringExtra(EXTRA_ACTION_TOKEN))
                                     .setActionStatus(success ? Action.Builder.STATUS_TYPE_COMPLETED : Action.Builder.STATUS_TYPE_FAILED)
@@ -3226,7 +3226,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     AlertDialog progressDialog = new AlertDialog(LaunchActivity.this, AlertDialog.ALERT_TYPE_SPINNER);
                     progressDialog.setCanCancel(false);
                     progressDialog.show();
-                    byte[] token = Base64.decode(code.substring("srv://login?token=".length()), Base64.URL_SAFE);
+                    byte[] token = Base64.decode(code.substring("ez://login?token=".length()), Base64.URL_SAFE);
                     TLRPC.TL_auth_acceptLoginToken req = new TLRPC.TL_auth_acceptLoginToken();
                     req.token = token;
                     ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {

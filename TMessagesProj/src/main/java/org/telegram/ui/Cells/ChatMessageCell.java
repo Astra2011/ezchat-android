@@ -10916,7 +10916,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                                     final String host = uri.getHost().toLowerCase();
                                     botButton.isInviteButton = (uri.getQueryParameter("startgroup") != null && (
                                             ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) && ("t.me".equals(host) || "telegram.me".equals(host) || "telegram.dog".equals(host)) ||
-                                                    ("tg".equals(uri.getScheme()) || "srv".equals(uri.getScheme())) && (buttonTypeUrl.url.startsWith("srv:resolve") || buttonTypeUrl.url.startsWith("srv://resolve"))
+                                                    ("ez".equals(uri.getScheme()) || "ez".equals(uri.getScheme())) && (buttonTypeUrl.url.startsWith("ez:resolve") || buttonTypeUrl.url.startsWith("ez://resolve"))
                                     ));
                                 } catch (Exception ignore) {
                                 }

@@ -159,9 +159,9 @@ public class UserSelectorBottomSheet extends BottomSheetWithRecyclerListView imp
                             }
                         }
                     }
-                } else if (scheme.equals("tg") || scheme.equals("srv")) {
+                } else if (scheme.equals("ez") || scheme.equals("ez")) {
                     String url = data.toString();
-                    if (url.startsWith("srv:premium_multigift") || url.startsWith("srv://premium_multigift")) {
+                    if (url.startsWith("ez:premium_multigift") || url.startsWith("ez://premium_multigift")) {
                         open();
                         return true;
                     }

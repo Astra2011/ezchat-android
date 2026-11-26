@@ -103,7 +103,7 @@ public class LinkManager {
         if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
             return handleHttp(uri);
 
-        if ("tg".equalsIgnoreCase(scheme) || "srv".equalsIgnoreCase(scheme))
+        if ("ez".equalsIgnoreCase(scheme))
             return handleTg(uri);
 
         if ("ton".equalsIgnoreCase(scheme))
@@ -180,7 +180,7 @@ public class LinkManager {
     }
 
     private boolean handleTg(Uri uri) {
-        uri = Uri.parse(uri.toString().replaceFirst("(?i)^(tg|srv):(//)?sendgrams&", "srv://sendgrams?"));
+        uri = Uri.parse(uri.toString().replaceFirst("(?i)^(tg|srv):(//)?sendgrams&", "ez://sendgrams?"));
         uri = normalizeTgUri(uri);
 
         final List<String> _segments = uri.getPathSegments();
@@ -293,7 +293,7 @@ public class LinkManager {
         return false;
     }
 
-    // srv://resolve
+    // ez://resolve
     private boolean handleTgResolve(Uri uri) {
         final List<String> _segments = uri.getPathSegments();
         if (_segments == null) return false;
@@ -316,7 +316,7 @@ public class LinkManager {
         return false;
     }
 
-    // srv://settings/*
+    // ez://settings/*
     private boolean handleSettings(final List<String> segments) {
         if (segments == null) return false;
         if (segments.isEmpty()) {
@@ -1872,9 +1872,9 @@ public class LinkManager {
                     }
                     break;
                 }
-                case "tg":
-                case "srv": {
-                    if (url.startsWith("srv:resolve") || url.startsWith("srv://resolve")) {
+                case "ez":
+                case "ez": {
+                    if (url.startsWith("ez:resolve") || url.startsWith("ez://resolve")) {
                         return !TextUtils.isEmpty(uri.getQueryParameter("appname"));
                     }
                     break;
