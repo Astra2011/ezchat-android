@@ -750,6 +750,13 @@ public class LocaleController {
                 }
             }
 
+            // EzChat: default to Simplified Chinese on first launch (no saved
+            // preference). override stays false so the language switcher keeps
+            // working and the user's choice is still persisted when selected.
+            if (currentInfo == null && lang == null) {
+                currentInfo = getLanguageFromDict("zh_hans");
+            }
+
             if (currentInfo == null && systemDefaultLocale.getLanguage() != null) {
                 currentInfo = getLanguageFromDict(systemDefaultLocale.getLanguage());
             }
