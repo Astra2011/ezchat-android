@@ -2283,7 +2283,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                     }
                                     break;
                                 }
-                                case "ez":
                                 case "ez": {
                                     String url = data.toString();
                                     if (url.startsWith("ez:premium_offer") || url.startsWith("ez://premium_offer")) {

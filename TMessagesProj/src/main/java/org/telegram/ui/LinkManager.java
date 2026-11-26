@@ -1872,7 +1872,6 @@ public class LinkManager {
                     }
                     break;
                 }
-                case "ez":
                 case "ez": {
                     if (url.startsWith("ez:resolve") || url.startsWith("ez://resolve")) {
                         return !TextUtils.isEmpty(uri.getQueryParameter("appname"));
