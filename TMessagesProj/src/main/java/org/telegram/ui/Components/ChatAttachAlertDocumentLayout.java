@@ -421,11 +421,7 @@ public class ChatAttachAlertDocumentLayout extends ChatAttachAlert.AttachAlertLa
             if (object instanceof ListItem) {
                 ListItem item = (ListItem) object;
                 File file = item.file;
-                boolean isExternalStorageManager = false;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    isExternalStorageManager = Environment.isExternalStorageManager();
-                }
-                if (!BuildVars.NO_SCOPED_STORAGE && (item.icon == R.drawable.files_storage || item.icon == R.drawable.files_internal) && !isExternalStorageManager) {
+                if (!BuildVars.NO_SCOPED_STORAGE && (item.icon == R.drawable.files_storage || item.icon == R.drawable.files_internal)) {
                     delegate.startDocumentSelectActivity();
                 } else if (file == null) {
                     if (item.icon == R.drawable.files_gallery) {
