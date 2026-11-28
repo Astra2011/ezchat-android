@@ -51,7 +51,9 @@ import org.xmlpull.v1.XmlPullParser;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -1241,6 +1243,31 @@ public class LocaleController {
         }
     }
 
+    // EzChat: provide Simplified Chinese strings on first launch, before the
+    // cloud language pack has been downloaded. The file stays separate from
+    // remote_zh_hans.xml so the regular remote pack still takes over later.
+    private static final String BUILT_IN_CHINESE_LOCALE_ASSET = "locale_zh_hans.xml";
+
+    private static File getBuiltInChineseLocaleFile() {
+        File target = new File(ApplicationLoader.getFilesDirFixed(), "builtin_" + BUILT_IN_CHINESE_LOCALE_ASSET);
+        if (target.exists()) {
+            return target;
+        }
+        try (InputStream input = ApplicationLoader.applicationContext.getAssets().open(BUILT_IN_CHINESE_LOCALE_ASSET)) {
+            FileOutputStream output = new FileOutputStream(target);
+            byte[] buffer = new byte[16 * 1024];
+            int count;
+            while ((count = input.read(buffer)) > 0) {
+                output.write(buffer, 0, count);
+            }
+            output.close();
+            return target;
+        } catch (Exception e) {
+            FileLog.e(e);
+            return null;
+        }
+    }
+
     private HashMap<String, String> getLocaleFileStrings(File file) {
         return getLocaleFileStrings(file, false);
     }
@@ -1390,8 +1417,17 @@ public class LocaleController {
                 editor.commit();
             }
             if (pathToFile == null) {
-                localizationExternal = Localization.EMPTY;
-                localizationExternalSize = 0;
+                File builtInChinese = "zh_hans".equals(shortName) ? getBuiltInChineseLocaleFile() : null;
+                if (builtInChinese != null) {
+                    HashMap<String, String> localeValues = getLocaleFileStrings(builtInChinese);
+                    localizationExternal = new Localization.Builder()
+                        .addLocalization(localeValues)
+                        .build();
+                    localizationExternalSize = calculateTranslatedCount(localeValues);
+                } else {
+                    localizationExternal = Localization.EMPTY;
+                    localizationExternalSize = 0;
+                }
             } else if (!fromFile) {
                 HashMap<String, String> localeValues;
                 localeValues = getLocaleFileStrings(hasBase ? localeInfo.getPathToBaseFile() : localeInfo.getPathToFile());
